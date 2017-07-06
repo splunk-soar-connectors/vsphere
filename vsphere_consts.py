@@ -1,7 +1,7 @@
 # --
 # File: vsphere_consts.py
 #
-# Copyright (c) Phantom Cyber Corporation, 2014-2016
+# Copyright (c) Phantom Cyber Corporation, 2014-2017
 #
 # This unpublished material is proprietary to Phantom Cyber.
 # All rights reserved. The methods and
@@ -24,14 +24,8 @@ VSPHERE_JSON_SNAP_NAME = "snapshot"
 VSPHERE_JSON_IP_HOSTNAME = "ip_hostname"
 
 # Status messages for vsphere app
-VSPHERE_SUCC_SERVER_CONNECT = "Connected to server"
 VSPHERE_ERR_SERVER_CONNECT = "Connection to {server_ip} failed"
 VSPHERE_SUCC_CANT_EXEC = "Cannot execute {action} since current state of vm is {state}"
-VSPHERE_ERR_FOLDER_PARSING = "Error occured in folder parsing"
-VSPHERE_SUCC_FILE_DOWNLOAD = "File download successful"
-VSPHERE_SUCC_FOLDER_PARSING = "Folder parsing successful"
-VSPHERE_ERR_HTTPS_LOGIN = "HTTPS login to {} failed"
-VSPHERE_SUCC_HTTPS_LOGIN = "HTTPS login to server successful"
 VSPHERE_ERR_CANNOT_FIND_SNAPSHOT_LIST_FILE = "Cannot find snapshot list file"
 VSPHERE_ERR_SNAPSHOT_PATH = "Cannot find path for snapshot '{}'"
 VSPHERE_ERR_CANNOT_GET_CONTENT_LENGTH = "Unable to detect the content length of the file"
@@ -58,7 +52,6 @@ VSPHERE_PROG_TASK_RUNNING = "Task running"
 VSPHERE_PROG_SNAPSHOT_DOWNLOADING = "Downloading snapshot file for '{snap_name}'"
 VSPHERE_PROG_SNAPSHOT_INFO_DOWNLOADING = "Downloading snapshot information file for '{snap_name}'"
 VSPHERE_PROG_FINISHED_DOWNLOADING_STATUS = "Finished downloading {0:.0%}"
-VSPHERE_PROG_FINISHED_HASHING_STATUS = "Finished hashing {0:.0%}"
 
 # Other constants used in the connector
 VSPHERE_CONST_VM_STATE_RUNNING = "running"
