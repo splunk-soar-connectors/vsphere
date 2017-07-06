@@ -1,7 +1,7 @@
 # --
 # File: vsphere_connector.py
 #
-# Copyright (c) Phantom Cyber Corporation, 2014-2016
+# Copyright (c) Phantom Cyber Corporation, 2014-2017
 #
 # This unpublished material is proprietary to Phantom Cyber.
 # All rights reserved. The methods and
@@ -11,6 +11,7 @@
 # of Phantom Cyber.
 #
 # --
+
 
 # Phantom imports
 import phantom.app as phantom
@@ -25,6 +26,7 @@ from vsphere_consts import *
 
 import os
 import re
+import ssl
 from collections import defaultdict
 from pysphere import VIServer
 import time
@@ -33,7 +35,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 from tempfile import mkdtemp
 
-requests.packages.urllib3.disable_warnings()
+requests.packages.urllib3.disable_warnings()  # pylint: disable=E1101
 
 
 class VsphereConnector(BaseConnector):
@@ -55,6 +57,7 @@ class VsphereConnector(BaseConnector):
 
         self._vs_server = None
         self._datacenters = list()
+        self._verify = False
 
         # Connector result global object
         self._vs_server = VIServer()
@@ -62,6 +65,8 @@ class VsphereConnector(BaseConnector):
     def initialize(self):
 
         config = self.get_config()
+
+        self._verify = config.get('verify_server_cert', False)
 
         # setup the auth
         self._auth = HTTPBasicAuth(config[phantom.APP_JSON_USERNAME], config[phantom.APP_JSON_PASSWORD])
@@ -82,6 +87,12 @@ class VsphereConnector(BaseConnector):
 
         if (self._vs_server.is_connected()):
             return phantom.APP_SUCCESS
+
+        if (self._verify is False):
+            try:
+                ssl._create_default_https_context = ssl._create_unverified_context
+            except:
+                pass
 
         server = config[phantom.APP_JSON_SERVER]
         username = config[phantom.APP_JSON_USERNAME]
@@ -478,7 +489,7 @@ class VsphereConnector(BaseConnector):
         params = {x: url_to_download[x] for x in keys}
 
         try:
-            r = requests.get(url_to_download[VSPHERE_CONST_URL], params=params, verify=False, auth=self._auth, stream=True)
+            r = requests.get(url_to_download[VSPHERE_CONST_URL], params=params, verify=self._verify, auth=self._auth, stream=True)
         except Exception as e:
             return (action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_SERVER_CONNECTION, e), content_size)
 
@@ -957,6 +968,7 @@ class VsphereConnector(BaseConnector):
                     self._vs_server.disconnect()
         except:
             pass
+
 
 if __name__ == '__main__':
 
