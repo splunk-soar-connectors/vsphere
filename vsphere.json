@@ -1,7 +1,7 @@
 {
     "appid"     : "120ec4fc-88b4-4aeb-a723-fa4bf43a5843",
     "name"    : "vSphere",
-    "description" : "This App implements <b>investigative</b>, <b>containment</b> and <b>VM management actions</b> on a VMware ESXi or vCenter server.",
+    "description" : "This app implements <b>investigative</b>, <b>containment</b> and <b>VM management actions</b> on VMware ESXi or vCenter server",
     "publisher": "Phantom",
     "type": "virtualization",
     "main_module" : "vsphere_connector.pyc",
@@ -11,7 +11,7 @@
     "product_vendor": "VMware",
     "product_name": "vSphere",
     "product_version_regex": ".*",
-    "min_phantom_version": "1.2.236",
+    "min_phantom_version": "2.1.467",
     "logo": "vmware.png",
     "license": "Copyright (c) Phantom Cyber Corporation 2015-2017",
     "configuration": {
@@ -444,7 +444,7 @@
       {
         "action": "snapshot vm",
         "description": "Take a snapshot of the VM",
-        "type": "investigate",
+        "type": "generic",
         "identifier": "take_snapshot",
         "read_only": false,
         "parameters": {
