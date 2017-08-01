@@ -444,7 +444,7 @@
       {
         "action": "snapshot vm",
         "description": "Take a snapshot of the VM",
-        "type": "investigate",
+        "type": "generic",
         "identifier": "take_snapshot",
         "read_only": false,
         "parameters": {
