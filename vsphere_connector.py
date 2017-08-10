@@ -35,8 +35,6 @@ import requests
 from requests.auth import HTTPBasicAuth
 from tempfile import mkdtemp
 
-requests.packages.urllib3.disable_warnings()  # pylint: disable=E1101
-
 
 class VsphereConnector(BaseConnector):
 
