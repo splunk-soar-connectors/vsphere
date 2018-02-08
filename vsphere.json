@@ -1,542 +1,594 @@
 {
-    "appid"     : "120ec4fc-88b4-4aeb-a723-fa4bf43a5843",
-    "name"    : "vSphere",
-    "description" : "This app implements <b>investigative</b>, <b>containment</b> and <b>VM management actions</b> on VMware ESXi or vCenter server",
+    "appid": "120ec4fc-88b4-4aeb-a723-fa4bf43a5843",
+    "name": "vSphere",
+    "description": "This app implements <b>investigative</b>, <b>containment</b> and <b>VM management actions</b> on VMware ESXi or vCenter server",
     "publisher": "Phantom",
     "type": "virtualization",
-    "main_module" : "vsphere_connector.pyc",
-    "app_version": "1.2.25",
-    "utctime_updated": "2017-08-10T00:13:37.000000Z",
+    "main_module": "vsphere_connector.pyc",
+    "app_version": "1.2.27",
+    "utctime_updated": "2018-01-26T00:51:05.000000Z",
     "package_name": "phantom_vsphere",
     "product_vendor": "VMware",
     "product_name": "vSphere",
     "product_version_regex": ".*",
     "min_phantom_version": "3.0.190",
-    "logo": "vmware.png",
-    "license": "Copyright (c) Phantom Cyber Corporation 2015-2017",
+    "logo": "logo_vmware.svg",
+    "logo_dark": "logo_vmware_dark.svg",
+    "license": "Copyright (c) Phantom Cyber Corporation, 2015-2018",
     "configuration": {
-      "server": {
-        "data_type": "string",
-        "order": 0,
-        "description": "Server IP/Hostname",
-        "required": true
-      },
-      "verify_server_cert": {
-        "data_type": "boolean",
-        "order": 1,
-        "description": "Verify server certificate",
-        "required": false
-      },
-      "username": {
-        "data_type": "string",
-        "order": 2,
-        "description": "Administrator username",
-        "required": true
-      },
-      "password": {
-        "data_type": "password",
-        "order": 3,
-        "description": "Administrator password",
-        "required": true
-      }
+        "server": {
+            "data_type": "string",
+            "order": 0,
+            "description": "Server IP/Hostname",
+            "required": true
+        },
+        "verify_server_cert": {
+            "data_type": "boolean",
+            "order": 1,
+            "description": "Verify server certificate",
+            "required": false
+        },
+        "username": {
+            "data_type": "string",
+            "order": 2,
+            "description": "Administrator username",
+            "required": true
+        },
+        "password": {
+            "data_type": "password",
+            "order": 3,
+            "description": "Administrator password",
+            "required": true
+        }
     },
     "actions": [
-      {
-        "action": "test connectivity",
-        "description": "Validate the asset configuration for connectivity. This action logs into the device to check the connection and credentials.",
-        "type": "test",
-        "identifier": "test_asset_connectivity",
-        "read_only": true,
-        "parameters": {
+        {
+            "action": "test connectivity",
+            "description": "Validate the asset configuration for connectivity. This action logs into the device to check the connection and credentials.",
+            "type": "test",
+            "identifier": "test_asset_connectivity",
+            "read_only": true,
+            "parameters": {},
+            "output": [],
+            "versions": "EQ(*)"
         },
-        "output": [],
-        "versions":"EQ(*)"
-      },
-      {
-        "action": "list vms",
-        "description": "Get the list of registered VMs",
-        "type": "investigate",
-        "identifier": "list_vms",
-        "read_only": true,
-        "parameters": {
+        {
+            "action": "list vms",
+            "description": "Get the list of registered VMs",
+            "type": "investigate",
+            "identifier": "list_vms",
+            "read_only": true,
+            "parameters": {},
+            "versions": "EQ(*)",
+            "render": {
+                "type": "table",
+                "width": 12,
+                "height": 5,
+                "title": "Virtual Machine List"
+            },
+            "output": [
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.vm_hostname",
+                    "data_type": "string",
+                    "column_name": "Host Name",
+                    "contains": [
+                        "host name"
+                    ],
+                    "column_order": 0
+                },
+                {
+                    "data_path": "action_result.data.*.vm_full_name",
+                    "data_type": "string",
+                    "column_name": "OS",
+                    "column_order": 1
+                },
+                {
+                    "data_path": "action_result.data.*.ip",
+                    "data_type": "string",
+                    "column_name": "Ip",
+                    "contains": [
+                        "ip"
+                    ],
+                    "column_order": 2
+                },
+                {
+                    "data_path": "action_result.data.*.vm_name",
+                    "data_type": "string",
+                    "column_name": "Name",
+                    "column_order": 3
+                },
+                {
+                    "data_path": "action_result.data.*.state",
+                    "data_type": "string",
+                    "column_name": "State",
+                    "column_order": 4
+                },
+                {
+                    "data_path": "action_result.data.*.vmx_path",
+                    "data_type": "string",
+                    "contains": [
+                        "vm"
+                    ],
+                    "column_name": "VM",
+                    "column_order": 5
+                },
+                {
+                    "data_path": "action_result.summary.total_vms",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.summary.running_vms",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "summary.total_objects",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "summary.total_objects_successful",
+                    "data_type": "numeric"
+                }
+            ]
         },
-        "versions": "EQ(*)",
-        "render": {
-          "type": "table",
-          "width": 12,
-          "height": 5,
-          "title": "Virtual Machine List"
+        {
+            "action": "get system info",
+            "description": "Get information about a VM",
+            "type": "investigate",
+            "identifier": "get_system_info",
+            "read_only": true,
+            "parameters": {
+                "ip_hostname": {
+                    "data_type": "string",
+                    "order": 0,
+                    "description": "Hostname/IP address to get info of",
+                    "contains": [
+                        "host name",
+                        "ip"
+                    ],
+                    "primary": true,
+                    "required": true
+                }
+            },
+            "versions": "EQ(*)",
+            "render": {
+                "type": "table",
+                "width": 12,
+                "height": 5,
+                "title": "System Info"
+            },
+            "output": [
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.ip_hostname",
+                    "data_type": "string",
+                    "contains": [
+                        "host name",
+                        "ip"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.vm_hostname",
+                    "data_type": "string",
+                    "column_name": "Host Name",
+                    "contains": [
+                        "host name"
+                    ],
+                    "column_order": 0
+                },
+                {
+                    "data_path": "action_result.data.*.vm_full_name",
+                    "data_type": "string",
+                    "column_name": "OS",
+                    "column_order": 1
+                },
+                {
+                    "data_path": "action_result.data.*.ip",
+                    "data_type": "string",
+                    "column_name": "Ip",
+                    "contains": [
+                        "ip"
+                    ],
+                    "column_order": 2
+                },
+                {
+                    "data_path": "action_result.data.*.vm_name",
+                    "data_type": "string",
+                    "column_name": "Name",
+                    "column_order": 3
+                },
+                {
+                    "data_path": "action_result.data.*.state",
+                    "data_type": "string",
+                    "column_name": "State",
+                    "column_order": 4
+                },
+                {
+                    "data_path": "action_result.data.*.vmx_path",
+                    "data_type": "string",
+                    "contains": [
+                        "vm"
+                    ],
+                    "column_name": "VM",
+                    "column_order": 5
+                },
+                {
+                    "data_path": "action_result.summary.total_vms_searched",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.summary.found_endpoint",
+                    "data_type": "boolean"
+                },
+                {
+                    "data_path": "summary.total_objects",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "summary.total_objects_successful",
+                    "data_type": "numeric"
+                }
+            ]
         },
-        "output": [
-          {
-            "data_path": "action_result.status",
-            "data_type": "string"
-          },
-          {
-            "data_path": "action_result.message",
-            "data_type": "string"
-          },
-          {
-            "data_path": "action_result.data.*.vm_hostname",
-            "data_type": "string",
-            "column_name": "Host Name",
-            "contains": [ "host name" ],
-            "column_order": 0
-          },
-          {
-            "data_path": "action_result.data.*.vm_full_name",
-            "data_type": "string",
-            "column_name": "OS",
-            "column_order": 1
-          },
-          {
-            "data_path": "action_result.data.*.ip",
-            "data_type": "string",
-            "column_name": "Ip",
-            "contains": [ "ip" ],
-            "column_order": 2
-          },
-          {
-            "data_path": "action_result.data.*.vm_name",
-            "data_type": "string",
-            "column_name": "Name",
-            "column_order": 3
-          },
-          {
-            "data_path": "action_result.data.*.state",
-            "data_type": "string",
-            "column_name": "State",
-            "column_order": 4
-          },
-          {
-            "data_path": "action_result.data.*.vmx_path",
-            "data_type": "string",
-            "contains": ["vm"],
-            "column_name": "VM",
-            "column_order": 5
-          },
-          {
-            "data_path": "action_result.summary.total_vms",
-            "data_type": "numeric"
-          },
-          {
-            "data_path": "action_result.summary.running_vms",
-            "data_type": "numeric"
-          },
-          {
-            "data_path": "summary.total_objects",
-            "data_type": "numeric"
-          },
-          {
-            "data_path": "summary.total_objects_successful",
-            "data_type": "numeric"
-          }
-        ]
-      },
-      {
-        "action": "get system info",
-        "description": "Get information about a VM",
-        "type": "investigate",
-        "identifier": "get_system_info",
-        "read_only": true,
-        "parameters": {
-          "ip_hostname": {
-            "data_type": "string",
-            "order": 0,
-            "description": "Hostname/IP address to get info of",
-            "contains": ["host name", "ip"],
-            "primary": true,
-            "required": true
-          }
+        {
+            "action": "start vm",
+            "description": "Start a stopped or suspended VM",
+            "type": "correct",
+            "identifier": "start_guest",
+            "read_only": false,
+            "undo": "suspend vm",
+            "parameters": {
+                "vmx_path": {
+                    "data_type": "string",
+                    "order": 0,
+                    "description": "VMX file path",
+                    "contains": [
+                        "vm"
+                    ],
+                    "primary": true,
+                    "required": true
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.vmx_path",
+                    "data_type": "string",
+                    "contains": [
+                        "vm"
+                    ]
+                },
+                {
+                    "data_path": "summary.total_objects",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "summary.total_objects_successful",
+                    "data_type": "numeric"
+                }
+            ],
+            "versions": "EQ(*)"
         },
-        "versions": "EQ(*)",
-        "render": {
-          "type": "table",
-          "width": 12,
-          "height": 5,
-          "title": "System Info"
+        {
+            "action": "revert vm",
+            "description": "Revert VM to a named snapshot if name is specified, otherwise revert to the current snapshot.",
+            "type": "contain",
+            "identifier": "revert_vm",
+            "read_only": false,
+            "parameters": {
+                "vmx_path": {
+                    "data_type": "string",
+                    "order": 0,
+                    "description": "VMX file path",
+                    "contains": [
+                        "vm"
+                    ],
+                    "primary": true,
+                    "required": true
+                },
+                "snapshot": {
+                    "data_type": "string",
+                    "order": 1,
+                    "description": "Snapshot name (case sensitive) to revert to"
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.snapshot",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.vmx_path",
+                    "data_type": "string",
+                    "contains": [
+                        "vm"
+                    ]
+                },
+                {
+                    "data_path": "summary.total_objects",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "summary.total_objects_successful",
+                    "data_type": "numeric"
+                }
+            ],
+            "versions": "EQ(*)"
         },
-        "output": [
-          {
-            "data_path": "action_result.status",
-            "data_type": "string"
-          },
-          {
-            "data_path": "action_result.message",
-            "data_type": "string"
-          },
-          {
-            "data_path": "action_result.parameter.ip_hostname",
-            "data_type": "string",
-            "contains": ["host name", "ip"]
-          },
-          {
-            "data_path": "action_result.data.*.vm_hostname",
-            "data_type": "string",
-            "column_name": "Host Name",
-            "contains": [ "host name" ],
-            "column_order": 0
-          },
-          {
-            "data_path": "action_result.data.*.vm_full_name",
-            "data_type": "string",
-            "column_name": "OS",
-            "column_order": 1
-          },
-          {
-            "data_path": "action_result.data.*.ip",
-            "data_type": "string",
-            "column_name": "Ip",
-            "contains": [ "ip" ],
-            "column_order": 2
-          },
-          {
-            "data_path": "action_result.data.*.vm_name",
-            "data_type": "string",
-            "column_name": "Name",
-            "column_order": 3
-          },
-          {
-            "data_path": "action_result.data.*.state",
-            "data_type": "string",
-            "column_name": "State",
-            "column_order": 4
-          },
-          {
-            "data_path": "action_result.data.*.vmx_path",
-            "data_type": "string",
-            "contains": ["vm"],
-            "column_name": "VM",
-            "column_order": 5
-          },
-          {
-            "data_path": "action_result.summary.total_vms_searched",
-            "data_type": "numeric"
-          },
-          {
-            "data_path": "action_result.summary.found_endpoint",
-            "data_type": "boolean"
-          },
-          {
-            "data_path": "summary.total_objects",
-            "data_type": "numeric"
-          },
-          {
-            "data_path": "summary.total_objects_successful",
-            "data_type": "numeric"
-          }
-        ]
-      },
-      {
-        "action": "start vm",
-        "description": "Start a stopped or suspended VM",
-        "type": "correct",
-        "identifier": "start_guest",
-        "read_only": false,
-        "undo": "suspend vm",
-        "parameters": {
-          "vmx_path": {
-            "data_type": "string",
-            "order": 0,
-            "description": "VMX file path",
-            "contains": ["vm"],
-            "primary": true,
-            "required": true
-          }
+        {
+            "action": "stop vm",
+            "description": "Stop a VM",
+            "type": "contain",
+            "identifier": "stop_guest",
+            "read_only": false,
+            "undo": "start vm",
+            "parameters": {
+                "vmx_path": {
+                    "data_type": "string",
+                    "order": 0,
+                    "description": "VMX file path",
+                    "contains": [
+                        "vm"
+                    ],
+                    "primary": true,
+                    "required": true
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.vmx_path",
+                    "data_type": "string",
+                    "contains": [
+                        "vm"
+                    ]
+                },
+                {
+                    "data_path": "summary.total_objects",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "summary.total_objects_successful",
+                    "data_type": "numeric"
+                }
+            ],
+            "versions": "EQ(*)"
         },
-        "output": [
-          {
-            "data_path": "action_result.status",
-            "data_type": "string"
-          },
-          {
-            "data_path": "action_result.message",
-            "data_type": "string"
-          },
-          {
-            "data_path": "action_result.parameter.vmx_path",
-            "data_type": "string",
-            "contains": [ "vm" ]
-          },
-          {
-            "data_path": "summary.total_objects",
-            "data_type": "numeric"
-          },
-          {
-            "data_path": "summary.total_objects_successful",
-            "data_type": "numeric"
-          }
-        ],
-        "versions": "EQ(*)"
-      },
-      {
-        "action": "revert vm",
-        "description": "Revert VM to a named snapshot if name is specified, otherwise revert to the current snapshot.",
-        "type": "contain",
-        "identifier": "revert_vm",
-        "read_only": false,
-        "parameters": {
-          "vmx_path": {
-            "data_type": "string",
-            "order": 0,
-            "description": "VMX file path",
-            "contains": ["vm"],
-            "primary": true,
-            "required": true
-          },
-          "snapshot": {
-            "data_type": "string",
-            "order": 1,
-            "description": "Snapshot name (case sensitive) to revert to"
-          }
+        {
+            "action": "suspend vm",
+            "description": "Suspend a VM",
+            "verbose": "The <b>start vm</b> action can be used to resume a suspended vm",
+            "type": "contain",
+            "identifier": "suspend_guest",
+            "read_only": false,
+            "undo": "start vm",
+            "parameters": {
+                "vmx_path": {
+                    "data_type": "string",
+                    "order": 0,
+                    "description": "VMX file path",
+                    "contains": [
+                        "vm"
+                    ],
+                    "primary": true,
+                    "required": true
+                },
+                "download": {
+                    "description": "Download suspend file to the vault",
+                    "order": 1,
+                    "data_type": "boolean",
+                    "default": false
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.download",
+                    "data_type": "boolean"
+                },
+                {
+                    "data_path": "action_result.parameter.vmx_path",
+                    "data_type": "string",
+                    "contains": [
+                        "vm"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.host",
+                    "data_type": "string",
+                    "contains": [
+                        "ip"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.size",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.type",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.vault_id",
+                    "data_type": "string",
+                    "contains": [
+                        "vault id",
+                        "os memory dump",
+                        "vm suspend file"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.vmx_path",
+                    "data_type": "string",
+                    "contains": [
+                        "vm"
+                    ]
+                },
+                {
+                    "data_path": "summary.total_objects",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "summary.total_objects_successful",
+                    "data_type": "numeric"
+                }
+            ],
+            "versions": "EQ(*)"
         },
-        "output": [
-          {
-            "data_path": "action_result.status",
-            "data_type": "string"
-          },
-          {
-            "data_path": "action_result.message",
-            "data_type": "string"
-          },
-          {
-            "data_path": "action_result.parameter.snapshot",
-            "data_type": "string"
-          },
-          {
-            "data_path": "action_result.parameter.vmx_path",
-            "data_type": "string",
-            "contains": ["vm"]
-          },
-          {
-            "data_path": "summary.total_objects",
-            "data_type": "numeric"
-          },
-          {
-            "data_path": "summary.total_objects_successful",
-            "data_type": "numeric"
-          }
-        ],
-        "versions": "EQ(*)"
-      },
-      {
-        "action": "stop vm",
-        "description": "Stop a VM",
-        "type": "contain",
-        "identifier": "stop_guest",
-        "read_only": false,
-        "undo": "start vm",
-        "parameters": {
-          "vmx_path": {
-            "data_type": "string",
-            "order": 0,
-            "description": "VMX file path",
-            "contains": ["vm"],
-            "primary": true,
-            "required": true
-          }
-        },
-        "output": [
-          {
-            "data_path": "action_result.status",
-            "data_type": "string"
-          },
-          {
-            "data_path": "action_result.message",
-            "data_type": "string"
-          },
-          {
-            "data_path": "action_result.parameter.vmx_path",
-            "data_type": "string",
-            "contains": ["vm"]
-          },
-          {
-            "data_path": "summary.total_objects",
-            "data_type": "numeric"
-          },
-          {
-            "data_path": "summary.total_objects_successful",
-            "data_type": "numeric"
-          }
-        ],
-        "versions": "EQ(*)"
-      },
-      {
-        "action": "suspend vm",
-        "description": "Suspend a VM",
-        "verbose": "The <b>start vm</b> action can be used to resume a suspended vm",
-        "type": "contain",
-        "identifier": "suspend_guest",
-        "read_only": false,
-        "undo": "start vm",
-        "parameters": {
-          "vmx_path": {
-            "data_type": "string",
-            "order": 0,
-            "description": "VMX file path",
-            "contains": ["vm"],
-            "primary": true,
-            "required": true
-          },
-          "download": {
-            "description": "Download suspend file to the vault",
-            "order": 1,
-            "data_type": "boolean",
-            "default": false
-          }
-        },
-        "output": [
-          {
-            "data_path": "action_result.status",
-            "data_type": "string"
-          },
-          {
-            "data_path": "action_result.message",
-            "data_type": "string"
-          },
-          {
-            "data_path": "action_result.parameter.download",
-            "data_type": "boolean"
-          },
-          {
-            "data_path": "action_result.parameter.vmx_path",
-            "data_type": "string",
-            "contains": [ "vm" ]
-          },
-          {
-            "data_path": "action_result.data.*.host",
-            "data_type": "string",
-            "contains": [ "ip" ]
-          },
-          {
-            "data_path": "action_result.data.*.name",
-            "data_type": "string"
-          },
-          {
-            "data_path": "action_result.data.*.size",
-            "data_type": "string"
-          },
-          {
-            "data_path": "action_result.data.*.type",
-            "data_type": "string"
-          },
-          {
-            "data_path": "action_result.data.*.vault_id",
-            "data_type": "string",
-            "contains": [ "vault id", "os memory dump", "vm suspend file" ]
-          },
-          {
-            "data_path": "action_result.data.*.vmx_path",
-            "data_type": "string",
-            "contains": [ "vm" ]
-          },
-          {
-            "data_path": "summary.total_objects",
-            "data_type": "numeric"
-          },
-          {
-            "data_path": "summary.total_objects_successful",
-            "data_type": "numeric"
-          }
-        ],
-        "versions": "EQ(*)"
-      },
-      {
-        "action": "snapshot vm",
-        "description": "Take a snapshot of the VM",
-        "type": "generic",
-        "identifier": "take_snapshot",
-        "read_only": false,
-        "parameters": {
-          "vmx_path": {
-            "data_type": "string",
-            "order": 0,
-            "description": "VMX file path",
-            "contains": ["vm"],
-            "primary": true,
-            "required": true
-          },
-          "download": {
-            "description": "Download snapshot file to the vault",
-            "data_type": "boolean",
-            "order": 1,
-            "default": true
-          }
-        },
-        "render": {
-          "type": "table",
-          "width": 12,
-          "height": 5,
-          "title": "Status"
-        },
-        "output": [
-          {
-            "data_path": "action_result.status",
-            "data_type": "string"
-          },
-          {
-            "data_path": "action_result.message",
-            "data_type": "string"
-          },
-          {
-            "data_path": "action_result.parameter.download",
-            "data_type": "boolean"
-          },
-          {
-            "data_path": "action_result.parameter.vmx_path",
-            "data_type": "string",
-            "contains": ["vm"]
-          },
-          {
-            "data_path": "action_result.data.*.vault_id",
-            "data_type": "string",
-            "contains": [ "vault id", "os memory dump", "vm snapshot file" ],
-            "column_name": "Vault ID",
-            "column_order": 0
-          },
-          {
-            "data_path": "action_result.data.*.host",
-            "data_type": "string",
-            "contains": [ "ip" ],
-            "column_name": "vSphere Server",
-            "column_order": 1
-          },
-          {
-            "data_path": "action_result.data.*.name",
-            "data_type": "string",
-            "column_name": "File name",
-            "column_order": 2
-          },
-          {
-            "data_path": "action_result.data.*.size",
-            "data_type": "string",
-            "column_name": "Snapshot size",
-            "column_order": 3
-          },
-          {
-            "data_path": "action_result.message",
-            "data_type": "string"
-          },
-          {
-            "data_path": "action_result.data.*.vmx_path",
-            "data_type": "string",
-            "contains": [ "vm" ]
-          },
-          {
-            "data_path": "action_result.data.*.type",
-            "data_type": "string"
-          },
-          {
-            "data_path": "summary.total_objects",
-            "data_type": "numeric"
-          },
-          {
-            "data_path": "summary.total_objects_successful",
-            "data_type": "numeric"
-          }
-        ],
-        "versions": "EQ(*)"
-      }
+        {
+            "action": "snapshot vm",
+            "description": "Take a snapshot of the VM",
+            "type": "generic",
+            "identifier": "take_snapshot",
+            "read_only": false,
+            "parameters": {
+                "vmx_path": {
+                    "data_type": "string",
+                    "order": 0,
+                    "description": "VMX file path",
+                    "contains": [
+                        "vm"
+                    ],
+                    "primary": true,
+                    "required": true
+                },
+                "download": {
+                    "description": "Download snapshot file to the vault",
+                    "data_type": "boolean",
+                    "order": 1,
+                    "default": true
+                }
+            },
+            "render": {
+                "type": "table",
+                "width": 12,
+                "height": 5,
+                "title": "Status"
+            },
+            "output": [
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.download",
+                    "data_type": "boolean"
+                },
+                {
+                    "data_path": "action_result.parameter.vmx_path",
+                    "data_type": "string",
+                    "contains": [
+                        "vm"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.vault_id",
+                    "data_type": "string",
+                    "contains": [
+                        "vault id",
+                        "os memory dump",
+                        "vm snapshot file"
+                    ],
+                    "column_name": "Vault ID",
+                    "column_order": 0
+                },
+                {
+                    "data_path": "action_result.data.*.host",
+                    "data_type": "string",
+                    "contains": [
+                        "ip"
+                    ],
+                    "column_name": "vSphere Server",
+                    "column_order": 1
+                },
+                {
+                    "data_path": "action_result.data.*.name",
+                    "data_type": "string",
+                    "column_name": "File name",
+                    "column_order": 2
+                },
+                {
+                    "data_path": "action_result.data.*.size",
+                    "data_type": "string",
+                    "column_name": "Snapshot size",
+                    "column_order": 3
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.vmx_path",
+                    "data_type": "string",
+                    "contains": [
+                        "vm"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.type",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "summary.total_objects",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "summary.total_objects_successful",
+                    "data_type": "numeric"
+                }
+            ],
+            "versions": "EQ(*)"
+        }
     ]
 }
-
