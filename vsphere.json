@@ -11,9 +11,9 @@
     "product_vendor": "VMware",
     "product_name": "vSphere",
     "product_version_regex": ".*",
-    "min_phantom_version": "3.0.190",
+    "min_phantom_version": "4.0.1068",
     "logo": "vmware.png",
-    "license": "Copyright (c) Phantom Cyber Corporation 2015-2017",
+    "license": "Copyright (c) 2016-2019 Splunk Inc.",
     "configuration": {
         "server": {
             "data_type": "string",
@@ -71,8 +71,25 @@
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.message",
-                    "data_type": "string"
+                    "data_path": "action_result.data.*.ip",
+                    "data_type": "string",
+                    "column_name": "Ip",
+                    "contains": [
+                        "ip"
+                    ],
+                    "column_order": 2
+                },
+                {
+                    "data_path": "action_result.data.*.state",
+                    "data_type": "string",
+                    "column_name": "State",
+                    "column_order": 4
+                },
+                {
+                    "data_path": "action_result.data.*.vm_full_name",
+                    "data_type": "string",
+                    "column_name": "OS",
+                    "column_order": 1
                 },
                 {
                     "data_path": "action_result.data.*.vm_hostname",
@@ -84,31 +101,10 @@
                     "column_order": 0
                 },
                 {
-                    "data_path": "action_result.data.*.vm_full_name",
-                    "data_type": "string",
-                    "column_name": "OS",
-                    "column_order": 1
-                },
-                {
-                    "data_path": "action_result.data.*.ip",
-                    "data_type": "string",
-                    "column_name": "Ip",
-                    "contains": [
-                        "ip"
-                    ],
-                    "column_order": 2
-                },
-                {
                     "data_path": "action_result.data.*.vm_name",
                     "data_type": "string",
                     "column_name": "Name",
                     "column_order": 3
-                },
-                {
-                    "data_path": "action_result.data.*.state",
-                    "data_type": "string",
-                    "column_name": "State",
-                    "column_order": 4
                 },
                 {
                     "data_path": "action_result.data.*.vmx_path",
@@ -120,12 +116,16 @@
                     "column_order": 5
                 },
                 {
+                    "data_path": "action_result.summary.running_vms",
+                    "data_type": "numeric"
+                },
+                {
                     "data_path": "action_result.summary.total_vms",
                     "data_type": "numeric"
                 },
                 {
-                    "data_path": "action_result.summary.running_vms",
-                    "data_type": "numeric"
+                    "data_path": "action_result.message",
+                    "data_type": "string"
                 },
                 {
                     "data_path": "summary.total_objects",
@@ -169,31 +169,12 @@
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.message",
-                    "data_type": "string"
-                },
-                {
                     "data_path": "action_result.parameter.ip_hostname",
                     "data_type": "string",
                     "contains": [
                         "host name",
                         "ip"
                     ]
-                },
-                {
-                    "data_path": "action_result.data.*.vm_hostname",
-                    "data_type": "string",
-                    "column_name": "Host Name",
-                    "contains": [
-                        "host name"
-                    ],
-                    "column_order": 0
-                },
-                {
-                    "data_path": "action_result.data.*.vm_full_name",
-                    "data_type": "string",
-                    "column_name": "OS",
-                    "column_order": 1
                 },
                 {
                     "data_path": "action_result.data.*.ip",
@@ -205,16 +186,31 @@
                     "column_order": 2
                 },
                 {
-                    "data_path": "action_result.data.*.vm_name",
-                    "data_type": "string",
-                    "column_name": "Name",
-                    "column_order": 3
-                },
-                {
                     "data_path": "action_result.data.*.state",
                     "data_type": "string",
                     "column_name": "State",
                     "column_order": 4
+                },
+                {
+                    "data_path": "action_result.data.*.vm_full_name",
+                    "data_type": "string",
+                    "column_name": "OS",
+                    "column_order": 1
+                },
+                {
+                    "data_path": "action_result.data.*.vm_hostname",
+                    "data_type": "string",
+                    "column_name": "Host Name",
+                    "contains": [
+                        "host name"
+                    ],
+                    "column_order": 0
+                },
+                {
+                    "data_path": "action_result.data.*.vm_name",
+                    "data_type": "string",
+                    "column_name": "Name",
+                    "column_order": 3
                 },
                 {
                     "data_path": "action_result.data.*.vmx_path",
@@ -226,12 +222,16 @@
                     "column_order": 5
                 },
                 {
+                    "data_path": "action_result.summary.found_endpoint",
+                    "data_type": "boolean"
+                },
+                {
                     "data_path": "action_result.summary.total_vms_searched",
                     "data_type": "numeric"
                 },
                 {
-                    "data_path": "action_result.summary.found_endpoint",
-                    "data_type": "boolean"
+                    "data_path": "action_result.message",
+                    "data_type": "string"
                 },
                 {
                     "data_path": "summary.total_objects",
@@ -268,15 +268,23 @@
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.message",
-                    "data_type": "string"
-                },
-                {
                     "data_path": "action_result.parameter.vmx_path",
                     "data_type": "string",
                     "contains": [
                         "vm"
                     ]
+                },
+                {
+                    "data_path": "action_result.data",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
                 },
                 {
                     "data_path": "summary.total_objects",
@@ -318,10 +326,6 @@
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.message",
-                    "data_type": "string"
-                },
-                {
                     "data_path": "action_result.parameter.snapshot",
                     "data_type": "string"
                 },
@@ -331,6 +335,18 @@
                     "contains": [
                         "vm"
                     ]
+                },
+                {
+                    "data_path": "action_result.data",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
                 },
                 {
                     "data_path": "summary.total_objects",
@@ -368,15 +384,23 @@
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.message",
-                    "data_type": "string"
-                },
-                {
                     "data_path": "action_result.parameter.vmx_path",
                     "data_type": "string",
                     "contains": [
                         "vm"
                     ]
+                },
+                {
+                    "data_path": "action_result.data",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
                 },
                 {
                     "data_path": "summary.total_objects",
@@ -418,10 +442,6 @@
             "output": [
                 {
                     "data_path": "action_result.status",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.message",
                     "data_type": "string"
                 },
                 {
@@ -471,6 +491,14 @@
                     ]
                 },
                 {
+                    "data_path": "action_result.summary",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
                     "data_path": "summary.total_objects",
                     "data_type": "numeric"
                 },
@@ -517,10 +545,6 @@
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.message",
-                    "data_type": "string"
-                },
-                {
                     "data_path": "action_result.parameter.download",
                     "data_type": "boolean"
                 },
@@ -530,17 +554,6 @@
                     "contains": [
                         "vm"
                     ]
-                },
-                {
-                    "data_path": "action_result.data.*.vault_id",
-                    "data_type": "string",
-                    "contains": [
-                        "vault id",
-                        "os memory dump",
-                        "vm snapshot file"
-                    ],
-                    "column_name": "Vault ID",
-                    "column_order": 0
                 },
                 {
                     "data_path": "action_result.data.*.host",
@@ -564,8 +577,19 @@
                     "column_order": 3
                 },
                 {
-                    "data_path": "action_result.message",
+                    "data_path": "action_result.data.*.type",
                     "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.vault_id",
+                    "data_type": "string",
+                    "contains": [
+                        "vault id",
+                        "os memory dump",
+                        "vm snapshot file"
+                    ],
+                    "column_name": "Vault ID",
+                    "column_order": 0
                 },
                 {
                     "data_path": "action_result.data.*.vmx_path",
@@ -575,7 +599,15 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.type",
+                    "data_path": "action_result.summary",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
                     "data_type": "string"
                 },
                 {
