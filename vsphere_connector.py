@@ -703,7 +703,10 @@ class VsphereConnector(BaseConnector):
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_CANNOT_FIND_SUSPEND_FILE)
 
         # we will be downloading file for this action, so create a tmp folder for it
-        temp_dir = mkdtemp(prefix='vsphere-', dir='/vault/tmp')
+        if hasattr(Vault, 'get_vault_tmp_dir'):
+            temp_dir = mkdtemp(prefix='vsphere-', dir=Vault.get_vault_tmp_dir())
+        else:
+            temp_dir = mkdtemp(prefix='vsphere-', dir='/vault/tmp')
 
         if not os.path.exists(temp_dir):
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_CANNOT_MAKE_TEMP_FOLDER)
