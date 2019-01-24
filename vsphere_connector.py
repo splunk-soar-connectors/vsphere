@@ -1,17 +1,8 @@
-# --
 # File: vsphere_connector.py
+# Copyright (c) 2016-2019 Splunk Inc.
 #
-# Copyright (c) Phantom Cyber Corporation, 2014-2018
-#
-# This unpublished material is proprietary to Phantom Cyber.
-# All rights reserved. The methods and
-# techniques described herein are considered trade secrets
-# and/or confidential. Reproduction or distribution, in whole
-# or in part, is forbidden except by express written permission
-# of Phantom Cyber.
-#
-# --
-
+# SPLUNK CONFIDENTIAL - Use or disclosure of this material in whole or in part
+# without a valid written license from Splunk Inc. is PROHIBITED.
 
 # Phantom imports
 import phantom.app as phantom
@@ -633,7 +624,10 @@ class VsphereConnector(BaseConnector):
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_CANNOT_FIND_SNAPSHOT_LIST_FILE)
 
         # we will be downloading files for this action, so create a tmp folder for it
-        temp_dir = mkdtemp(prefix='vsphere-', dir='/vault/tmp')
+        if hasattr(Vault, 'get_vault_tmp_dir'):
+            temp_dir = mkdtemp(prefix='vsphere-', dir=Vault.get_vault_tmp_dir())
+        else:
+            temp_dir = mkdtemp(prefix='vsphere-', dir='/vault/tmp')
 
         if not os.path.exists(temp_dir):
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_CANNOT_MAKE_TEMP_FOLDER)
@@ -708,7 +702,10 @@ class VsphereConnector(BaseConnector):
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_CANNOT_FIND_SUSPEND_FILE)
 
         # we will be downloading file for this action, so create a tmp folder for it
-        temp_dir = mkdtemp(prefix='vsphere-', dir='/vault/tmp')
+        if hasattr(Vault, 'get_vault_tmp_dir'):
+            temp_dir = mkdtemp(prefix='vsphere-', dir=Vault.get_vault_tmp_dir())
+        else:
+            temp_dir = mkdtemp(prefix='vsphere-', dir='/vault/tmp')
 
         if not os.path.exists(temp_dir):
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_CANNOT_MAKE_TEMP_FOLDER)
