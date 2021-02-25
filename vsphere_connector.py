@@ -1,5 +1,5 @@
 # File: vsphere_connector.py
-# Copyright (c) 2016-2019 Splunk Inc.
+# Copyright (c) 2016-2021 Splunk Inc.
 #
 # SPLUNK CONFIDENTIAL - Use or disclosure of this material in whole or in part
 # without a valid written license from Splunk Inc. is PROHIBITED.
@@ -960,7 +960,7 @@ class VsphereConnector(BaseConnector):
         # even when is_connected returns True, could happen if the remote end disconnects.
         try:
             if (self._vs_server.is_connected()):
-                    self._vs_server.disconnect()
+                self._vs_server.disconnect()
         except:
             pass
 
