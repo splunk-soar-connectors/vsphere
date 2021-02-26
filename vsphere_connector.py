@@ -6,6 +6,7 @@
 
 # Phantom imports
 import phantom.app as phantom
+import phantom.rules as ph_rules
 
 from phantom.base_connector import BaseConnector
 from phantom.action_result import ActionResult
@@ -369,7 +370,7 @@ class VsphereConnector(BaseConnector):
         # self.debug_print("files data", files)
         vm_file = None
 
-        for k, v in files.items():
+        for k, v in list(files.items()):
 
             # first match file type
             if (v['type'] != file_type):
@@ -425,15 +426,15 @@ class VsphereConnector(BaseConnector):
         file_name = os.path.basename(local_file_path)
 
         try:
-            os.chmod(os.path.dirname(local_file_path), 0770)
-            vault_ret_dict = Vault.add_attachment(local_file_path, container_id,
-                                                    file_name, vault_attach_dict)
+            os.chmod(os.path.dirname(local_file_path), 0o770)
+            success, message, vault_id = ph_rules.vault_add(file_location=local_file_path, container=container_id, file_name=file_name,
+                                              metadata=vault_attach_dict)
 
         except Exception as e:
             return result.set_status(phantom.APP_ERROR, phantom.APP_ERR_FILE_ADD_TO_VAULT, e)
 
-        if vault_ret_dict.get('succeeded'):
-            curr_data[phantom.APP_JSON_VAULT_ID] = vault_ret_dict[phantom.APP_JSON_HASH]
+        if success:
+            curr_data[phantom.APP_JSON_VAULT_ID] = vault_id
             curr_data[phantom.APP_JSON_NAME] = file_name
             result.add_data(curr_data)
             wanted_keys = [phantom.APP_JSON_VAULT_ID, phantom.APP_JSON_NAME, phantom.APP_JSON_SIZE]
@@ -442,7 +443,7 @@ class VsphereConnector(BaseConnector):
             result.set_status(phantom.APP_SUCCESS)
         else:
             result.set_status(phantom.APP_ERROR, phantom.APP_ERR_FILE_ADD_TO_VAULT)
-            result.append_to_message(vault_ret_dict['message'])
+            result.append_to_message(message)
 
         return result.get_status()
 
@@ -973,7 +974,7 @@ if __name__ == '__main__':
     pudb.set_trace()
 
     if (len(sys.argv) < 2):
-        print "No test json specified as input"
+        print("No test json specified as input")
         exit(0)
 
     with open(sys.argv[1]) as f:
@@ -984,6 +985,6 @@ if __name__ == '__main__':
         connector = VsphereConnector()
         connector.print_progress_message = True
         ret_val = connector._handle_action(json.dumps(in_json), None)
-        print json.dumps(json.loads(ret_val), indent=4)
+        print(json.dumps(json.loads(ret_val), indent=4))
 
     exit(0)

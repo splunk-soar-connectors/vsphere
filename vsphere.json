@@ -27,6 +27,14 @@
             }
         ]
     },
+    "pip3_dependencies": {
+        "wheel": [
+            {
+                "module": "pysphere",
+                "input_file": "wheels/pysphere-0.1.8-py3-none-any.whl"
+            }
+        ]
+    },
     "configuration": {
         "server": {
             "data_type": "string",
