@@ -28,6 +28,7 @@ VSPHERE_ERR_CANNOT_MAKE_TEMP_FOLDER = "Cannot make temp folder"
 VSPHERE_SUCC_CONNECTIVITY_TEST = "Connectivity test passed"
 VSPHERE_ERR_CONNECTIVITY_TEST = "Connectivity test failed"
 VSPHERE_ERR_FAILED_TO_GET_SNAPSHOT_INFO = "Failed to get information of latest snapshot"
+VSPHERE_ERR_FAILED_TO_REVERT_VM = "Failed to revert vm. Error: {err_msg}"
 VSPHERE_ERR_SERVER_CONNECTION = "Server connection error"
 VSPHERE_ERR_SERVER_RETURNED_STATUS_CODE = "Server returned error code: {code}"
 

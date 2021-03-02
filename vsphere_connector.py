@@ -848,12 +848,14 @@ class VsphereConnector(BaseConnector):
         # get the snapshot name
         snap_name = param.get(VSPHERE_JSON_SNAP_NAME)
 
-        if (snap_name is not None):
-            task = vm.revert_to_named_snapshot(snap_name, sync_run=False)
-        else:
-            task = vm.revert_to_snapshot(sync_run=False)
-
-        status_code = self._wait_for_async_task(task, action, action_result)
+        try:
+            if (snap_name is not None):
+                task = vm.revert_to_named_snapshot(snap_name, sync_run=False)
+            else:
+                task = vm.revert_to_snapshot(sync_run=False)
+            status_code = self._wait_for_async_task(task, action, action_result)
+        except Exception as e:
+            return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_FAILED_TO_REVERT_VM, err_msg=str(e))
 
         if (phantom.is_fail(status_code)):
             return status_code
