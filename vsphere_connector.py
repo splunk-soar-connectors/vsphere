@@ -543,7 +543,7 @@ class VsphereConnector(BaseConnector):
                     snap_list_dict[index].update({'key': index, 'file_name': file_name})
                     # try to see if this is the snapshot we are looking for
                     # see if the display_Name for this snapshot has been filled in
-                    if (VSPHERE_JSON_DISPLAY_NAME) in snap_list_dict[index]:
+                    if VSPHERE_JSON_DISPLAY_NAME in snap_list_dict[index]:
                         if snap_list_dict[index][VSPHERE_JSON_DISPLAY_NAME] == snap_name:
                             if id is None:
                                 snap_path = snap_list_dict[index]['file_name']
@@ -565,7 +565,7 @@ class VsphereConnector(BaseConnector):
                     # try to see if this is the snapshot we are looking for
                     if display_name == snap_name:
                         # see if the file name for this snapshot has been filled in
-                        if ('file_name') in snap_list_dict[index]:
+                        if 'file_name' in snap_list_dict[index]:
                             if id is None:
                                 snap_path = snap_list_dict[index]['file_name']
                                 break
@@ -585,8 +585,8 @@ class VsphereConnector(BaseConnector):
                         # try to see if this is the snapshot we are looking for
                         if snap_id == id:
                             # see if the file name for this snapshot has been filled in
-                            if ('file_name') in snap_list_dict[index]:
-                                if (VSPHERE_JSON_DISPLAY_NAME) in snap_list_dict[index]:
+                            if 'file_name' in snap_list_dict[index]:
+                                if VSPHERE_JSON_DISPLAY_NAME in snap_list_dict[index]:
                                     if snap_list_dict[index][VSPHERE_JSON_DISPLAY_NAME] == snap_name:
                                         snap_path = snap_list_dict[index]['file_name']
                                         break
