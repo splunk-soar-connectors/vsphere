@@ -2,24 +2,36 @@
     "appid": "120ec4fc-88b4-4aeb-a723-fa4bf43a5843",
     "name": "vSphere",
     "description": "This app implements investigative, containment and VM management actions on VMware ESXi or vCenter server",
-    "publisher": "Phantom",
+    "publisher": "Splunk",
     "type": "virtualization",
-    "main_module": "vsphere_connector.pyc",
-    "app_version": "1.2.32",
-    "utctime_updated": "2019-10-31T19:14:51.000000Z",
+    "main_module": "vsphere_connector.py",
+    "app_version": "2.0.0",
+    "utctime_updated": "2019-11-08T01:26:03.000000Z",
     "package_name": "phantom_vsphere",
     "product_vendor": "VMware",
     "product_name": "vSphere",
     "product_version_regex": ".*",
-    "min_phantom_version": "4.5.15922",
+    "min_phantom_version": "4.9.39220",
+    "python_version": "3",
+    "latest_tested_versions": [
+        "VMware ESXi v6.0.0"
+    ],
     "logo": "logo_vsphere.svg",
     "logo_dark": "logo_vsphere_dark.svg",
-    "license": "Copyright (c) 2016-2019 Splunk Inc.",
+    "license": "Copyright (c) 2016-2021 Splunk Inc.",
     "pip_dependencies": {
         "wheel": [
             {
                 "module": "pysphere",
                 "input_file": "wheels/pysphere-0.1.7-py2-none-any.whl"
+            }
+        ]
+    },
+    "pip3_dependencies": {
+        "wheel": [
+            {
+                "module": "pysphere",
+                "input_file": "wheels/pysphere-0.1.8-py3-none-any.whl"
             }
         ]
     },

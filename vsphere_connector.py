@@ -1,12 +1,12 @@
 # File: vsphere_connector.py
-# Copyright (c) 2016-2019 Splunk Inc.
+# Copyright (c) 2016-2021 Splunk Inc.
 #
 # SPLUNK CONFIDENTIAL - Use or disclosure of this material in whole or in part
 # without a valid written license from Splunk Inc. is PROHIBITED.
 
-
 # Phantom imports
 import phantom.app as phantom
+import phantom.rules as ph_rules
 
 from phantom.base_connector import BaseConnector
 from phantom.action_result import ActionResult
@@ -75,10 +75,10 @@ class VsphereConnector(BaseConnector):
                 A status code
         """
 
-        if (self._vs_server.is_connected()):
+        if self._vs_server.is_connected():
             return phantom.APP_SUCCESS
 
-        if (self._verify is False):
+        if self._verify is False:
             try:
                 ssl._create_default_https_context = ssl._create_unverified_context
             except:
@@ -107,7 +107,7 @@ class VsphereConnector(BaseConnector):
         # Connect to the server
         status_code = self._connect_to_server(config)
 
-        if (phantom.is_fail(status_code)):
+        if phantom.is_fail(status_code):
             return status_code
 
         # Add the action result
@@ -132,7 +132,7 @@ class VsphereConnector(BaseConnector):
                 ip = vm.get_property('ip_address')
                 hostname = vm.get_property('hostname')
 
-                if ((ip_hostname != ip) and (ip_hostname != hostname)):
+                if (ip_hostname != ip) and (ip_hostname != hostname):
                     continue
 
                 # one of the params matched
@@ -143,7 +143,7 @@ class VsphereConnector(BaseConnector):
                 curr_data[VSPHERE_JSON_GUEST_HOST_NAME] = hostname
                 curr_data[VSPHERE_JSON_GUEST_FULL_NAME] = vm.get_property('guest_full_name')
 
-                if (vm.is_powered_on()):
+                if vm.is_powered_on():
                     curr_data[phantom.APP_JSON_STATE] = VSPHERE_CONST_VM_STATE_RUNNING
                 else:
                     curr_data[phantom.APP_JSON_STATE] = VSPHERE_CONST_VM_STATE_NOT_RUNNING
@@ -171,7 +171,7 @@ class VsphereConnector(BaseConnector):
         # Connect to the server
         status_code = self._connect_to_server(config)
 
-        if (phantom.is_fail(status_code)):
+        if phantom.is_fail(status_code):
             return status_code
 
         # Add the action result
@@ -182,7 +182,7 @@ class VsphereConnector(BaseConnector):
 
         for datacenter in self._datacenters:
 
-            if (action == self.ACTION_ID_GET_RUNNING_GUESTS):
+            if action == self.ACTION_ID_GET_RUNNING_GUESTS:
                 vm_list = self._vs_server.get_registered_vms(status='poweredOn', datacenter=datacenter)
             else:
                 vm_list = self._vs_server.get_registered_vms(datacenter=datacenter)
@@ -200,7 +200,7 @@ class VsphereConnector(BaseConnector):
                 curr_data[VSPHERE_JSON_GUEST_HOST_NAME] = vm.get_property('hostname')
                 curr_data[VSPHERE_JSON_GUEST_FULL_NAME] = vm.get_property('guest_full_name')
 
-                if (vm.is_powered_on()):
+                if vm.is_powered_on():
                     curr_data[phantom.APP_JSON_STATE] = VSPHERE_CONST_VM_STATE_RUNNING
                     total_running += 1
                 else:
@@ -232,22 +232,22 @@ class VsphereConnector(BaseConnector):
             # interested in all states
             status = task.wait_for_state(['success', 'error', 'queued', 'running'])
 
-            if (status == 'error'):
+            if status == 'error':
                 action_result.set_status(phantom.APP_ERROR, phantom.APP_ERR_CMD_EXEC)
                 action_result.append_to_message(task.get_error_message())
                 break
-            elif(status == 'success'):
+            elif status == 'success':
                 action_result.set_status(phantom.APP_SUCCESS, phantom.APP_SUCC_CMD_EXEC)
                 break
-            elif(status == 'queued'):
+            elif status == 'queued':
                 self.send_progress(VSPHERE_PROG_TASK_QUEUED)
-            elif(status == 'running'):
+            elif status == 'running':
                 progress = task.get_progress()
-                if (progress):
+                if progress:
                     self.send_progress(VSPHERE_PROG_TASK_COMPLETED_PERCENT,
                             task_name=task_name,
                             progress=progress)
-                elif (not displayed_once):
+                elif not displayed_once:
                     self.send_progress(VSPHERE_PROG_TASK_RUNNING)
                     displayed_once = True
 
@@ -262,7 +262,7 @@ class VsphereConnector(BaseConnector):
         # for e.g. [Datacenter][DAS_labesxi1_1] OpenVAS/OpenVAS.vmx
 
         search = re.search("\[(.*)\](\[.*)", full_vmx_path)
-        if (not search):
+        if not search:
             return VSPHERE_CONST_DEFAULT_DATACENTER, full_vmx_path
 
         datacenter = search.group(1)
@@ -282,7 +282,7 @@ class VsphereConnector(BaseConnector):
         # Connect to the server
         status_code = self._connect_to_server(config)
 
-        if (phantom.is_fail(status_code)):
+        if phantom.is_fail(status_code):
             return status_code
 
         # create an action_result
@@ -300,13 +300,13 @@ class VsphereConnector(BaseConnector):
 
         task = None
         # Only stop if powered on, else the API returns back an error
-        if ((action == self.ACTION_ID_STOP_GUEST) and vm.is_powered_on()):
+        if (action == self.ACTION_ID_STOP_GUEST) and vm.is_powered_on():
             task = vm.power_off(sync_run=False)
         # Only start if it can be, else the API returns back an error
-        elif ((action == self.ACTION_ID_START_GUEST) and (not vm.is_powered_on())):
+        elif (action == self.ACTION_ID_START_GUEST) and (not vm.is_powered_on()):
             task = vm.power_on(sync_run=False)
 
-        if (task):
+        if task:
             status_code = self._wait_for_async_task(task, action, action_result)
         else:
             # Most probably we don't have to change the state right now, treat this
@@ -370,24 +370,24 @@ class VsphereConnector(BaseConnector):
         # self.debug_print("files data", files)
         vm_file = None
 
-        for k, v in files.items():
+        for k, v in list(files.items()):
 
             # first match file type
-            if (v['type'] != file_type):
+            if v['type'] != file_type:
                 continue
 
             # file type matched
-            if (not file_name):
+            if not file_name:
                 # no need to match the name, since type matched, file is found
                 vm_file = v['name']
                 break
 
-            if ((file_name) and (v['name'].find(file_name) != -1)):
+            if (file_name) and (v['name'].find(file_name) != -1):
                 # file_name is specified and it matched
                 vm_file = v['name']
                 break
 
-        if (vm_file is None):
+        if vm_file is None:
             # Not found
             return None
 
@@ -426,15 +426,15 @@ class VsphereConnector(BaseConnector):
         file_name = os.path.basename(local_file_path)
 
         try:
-            os.chmod(os.path.dirname(local_file_path), 0770)
-            vault_ret_dict = Vault.add_attachment(local_file_path, container_id,
-                                                    file_name, vault_attach_dict)
+            os.chmod(os.path.dirname(local_file_path), 0o770)
+            success, message, vault_id = ph_rules.vault_add(file_location=local_file_path, container=container_id, file_name=file_name,
+                                              metadata=vault_attach_dict)
 
         except Exception as e:
             return result.set_status(phantom.APP_ERROR, phantom.APP_ERR_FILE_ADD_TO_VAULT, e)
 
-        if vault_ret_dict.get('succeeded'):
-            curr_data[phantom.APP_JSON_VAULT_ID] = vault_ret_dict[phantom.APP_JSON_HASH]
+        if success:
+            curr_data[phantom.APP_JSON_VAULT_ID] = vault_id
             curr_data[phantom.APP_JSON_NAME] = file_name
             result.add_data(curr_data)
             wanted_keys = [phantom.APP_JSON_VAULT_ID, phantom.APP_JSON_NAME, phantom.APP_JSON_SIZE]
@@ -443,7 +443,7 @@ class VsphereConnector(BaseConnector):
             result.set_status(phantom.APP_SUCCESS)
         else:
             result.set_status(phantom.APP_ERROR, phantom.APP_ERR_FILE_ADD_TO_VAULT)
-            result.append_to_message(vault_ret_dict['message'])
+            result.append_to_message(message)
 
         return result.get_status()
 
@@ -483,13 +483,13 @@ class VsphereConnector(BaseConnector):
         except Exception as e:
             return (action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_SERVER_CONNECTION, e), content_size)
 
-        if (r.status_code != requests.codes.ok):  # pylint: disable=E1101
+        if r.status_code != requests.codes.ok:  # pylint: disable=E1101
             return (action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_SERVER_RETURNED_STATUS_CODE, code=r.status_code), content_size)
 
         # get the content length
         content_size = r.headers['content-length']
 
-        if (not content_size):
+        if not content_size:
             return (action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_CANNOT_GET_CONTENT_LENGTH), content_size)
 
         self.save_progress(phantom.APP_PROG_FILE_SIZE, value=content_size, type='bytes')
@@ -500,7 +500,7 @@ class VsphereConnector(BaseConnector):
         block_size = bytes_to_download
 
         # if the file is big then download in % increments
-        if (bytes_to_download > big_file_size_bytes):
+        if bytes_to_download > big_file_size_bytes:
             block_size = (bytes_to_download * percent_block) / 100
 
         bytes_downloaded = 0
@@ -508,7 +508,7 @@ class VsphereConnector(BaseConnector):
         try:
             with open(local_file_path, 'wb') as file_handle:
                 for chunk in r.iter_content(chunk_size=block_size):
-                    if (chunk):
+                    if chunk:
                         bytes_downloaded += len(chunk)
                         file_handle.write(chunk)
                         file_handle.flush()
@@ -543,13 +543,13 @@ class VsphereConnector(BaseConnector):
                     snap_list_dict[index].update({'key': index, 'file_name': file_name})
                     # try to see if this is the snapshot we are looking for
                     # see if the display_Name for this snapshot has been filled in
-                    if ((VSPHERE_JSON_DISPLAY_NAME) in snap_list_dict[index]):
-                        if (snap_list_dict[index][VSPHERE_JSON_DISPLAY_NAME] == snap_name):
-                            if (id is None):
+                    if VSPHERE_JSON_DISPLAY_NAME in snap_list_dict[index]:
+                        if snap_list_dict[index][VSPHERE_JSON_DISPLAY_NAME] == snap_name:
+                            if id is None:
                                 snap_path = snap_list_dict[index]['file_name']
                                 break
-                            elif ('id' in snap_list_dict[index]):
-                                if (snap_list_dict[index]['id'] == id):
+                            elif 'id' in snap_list_dict[index]:
+                                if snap_list_dict[index]['id'] == id:
                                     snap_path = snap_list_dict[index]['file_name']
                                     break
                     continue
@@ -563,19 +563,19 @@ class VsphereConnector(BaseConnector):
                     snap_list_dict[index].update({'key': index, VSPHERE_JSON_DISPLAY_NAME: display_name})
 
                     # try to see if this is the snapshot we are looking for
-                    if (display_name == snap_name):
+                    if display_name == snap_name:
                         # see if the file name for this snapshot has been filled in
-                        if (('file_name') in snap_list_dict[index]):
-                            if (id is None):
+                        if 'file_name' in snap_list_dict[index]:
+                            if id is None:
                                 snap_path = snap_list_dict[index]['file_name']
                                 break
-                            elif ('id' in snap_list_dict[index]):
-                                if (snap_list_dict[index]['id'] == id):
+                            elif 'id' in snap_list_dict[index]:
+                                if snap_list_dict[index]['id'] == id:
                                     snap_path = snap_list_dict[index]['file_name']
                                     break
                     continue
 
-                if (id is not None):
+                if id is not None:
                     m = re.search('snapshot([0-9]+)\.uid[ ]*=[ ]*"(.*)"', line)
                     if m:
                         index = m.group(1)
@@ -583,11 +583,11 @@ class VsphereConnector(BaseConnector):
                         # self.debug_print("Snap ID: {} at Index: {}".format(snap_id, index))
                         snap_list_dict[index].update({'key': index, 'id': snap_id})
                         # try to see if this is the snapshot we are looking for
-                        if (snap_id == id):
+                        if snap_id == id:
                             # see if the file name for this snapshot has been filled in
-                            if (('file_name') in snap_list_dict[index]):
-                                if ((VSPHERE_JSON_DISPLAY_NAME) in snap_list_dict[index]):
-                                    if (snap_list_dict[index][VSPHERE_JSON_DISPLAY_NAME] == snap_name):
+                            if 'file_name' in snap_list_dict[index]:
+                                if VSPHERE_JSON_DISPLAY_NAME in snap_list_dict[index]:
+                                    if snap_list_dict[index][VSPHERE_JSON_DISPLAY_NAME] == snap_name:
                                         snap_path = snap_list_dict[index]['file_name']
                                         break
                         continue
@@ -621,7 +621,7 @@ class VsphereConnector(BaseConnector):
 
         # Create the url to the snapshot list file
         snap_list_url = self._create_url_of_file(server, 'snapshotList', vm, datacenter)
-        if (not snap_list_url):
+        if not snap_list_url:
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_CANNOT_FIND_SNAPSHOT_LIST_FILE)
 
         # we will be downloading files for this action, so create a tmp folder for it
@@ -638,17 +638,17 @@ class VsphereConnector(BaseConnector):
         local_file_path = '{0}/{1}'.format(temp_dir, phantom.get_file_name_from_url(snap_list_url[VSPHERE_CONST_URL]))
         status_code, content_size = self._download_file(snap_list_url, action_result, local_file_path)
 
-        if (phantom.is_fail(status_code)):
+        if phantom.is_fail(status_code):
             return action_result.get_status()
 
         # parse the downloaded file and get the file_name that our snapshot represents
         snap_file = self._parse_snap_list_file(local_file_path, snap_name, id)
-        if (not snap_file):
+        if not snap_file:
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_SNAPSHOT_PATH, snap_name)
 
         # got the file name, now get the url of this file_name
         snap_file_url = self._create_url_of_file(server, 'snapshotData', vm, datacenter, snap_file)
-        if (not snap_file_url):
+        if not snap_file_url:
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_SNAPSHOT_URL, snap_name)
 
         # Set the status to failure, this is to override the successfull download status of the snapshot list file,
@@ -661,7 +661,7 @@ class VsphereConnector(BaseConnector):
 
         self.save_progress(VSPHERE_PROG_SNAPSHOT_DOWNLOADING, snap_name=snap_name)
         status_code, content_size = self._download_file(snap_file_url, action_result, local_file_path)
-        if (phantom.is_fail(status_code)):
+        if phantom.is_fail(status_code):
             return action_result.get_status()
 
         # move it to the vault
@@ -699,7 +699,7 @@ class VsphereConnector(BaseConnector):
 
         vm_suspend_url = self._create_url_of_file(server, 'suspend', vm, datacenter)
 
-        if (not vm_suspend_url):
+        if not vm_suspend_url:
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_CANNOT_FIND_SUSPEND_FILE)
 
         # we will be downloading file for this action, so create a tmp folder for it
@@ -715,7 +715,7 @@ class VsphereConnector(BaseConnector):
         local_file_path = '{0}/{1}'.format(temp_dir, phantom.get_file_name_from_url(vm_suspend_url[VSPHERE_CONST_URL]))
         status_code, content_size = self._download_file(vm_suspend_url, action_result, local_file_path)
 
-        if (phantom.is_fail(status_code)):
+        if phantom.is_fail(status_code):
             return action_result.get_status()
 
         # move it to the vault
@@ -740,11 +740,11 @@ class VsphereConnector(BaseConnector):
         for snapshot in snapshot_list:
             create_time = snapshot.get_create_time()
             create_time_secs = mktime(create_time)
-            if (last_snap_time < create_time_secs):
+            if last_snap_time < create_time_secs:
                 last_snap_time = create_time_secs
                 last_snap = snapshot
 
-        if (last_snap):
+        if last_snap:
             self.debug_print('last create time epoch', last_snap_time)
             self.debug_print('last snap name', last_snap.get_name())
             name = last_snap.get_name()
@@ -769,7 +769,7 @@ class VsphereConnector(BaseConnector):
         # Connect to the server
         status_code = self._connect_to_server(config)
 
-        if (phantom.is_fail(status_code)):
+        if phantom.is_fail(status_code):
             return status_code
 
         # create an action_result to represent this item
@@ -797,10 +797,10 @@ class VsphereConnector(BaseConnector):
 
         state_not_changed = False
 
-        if (action_result.get_message().find(VSPHERE_VIRTUAL_MACHINE_NOT_CHANGED) != -1):
+        if action_result.get_message().find(VSPHERE_VIRTUAL_MACHINE_NOT_CHANGED) != -1:
             state_not_changed = True
 
-        if (phantom.is_fail(status_code) and (not state_not_changed)):
+        if phantom.is_fail(status_code) and (not state_not_changed):
             return status_code
         else:
             message = VSPHERE_VIRTUAL_MACHINE_NOT_CHANGED if (state_not_changed) else VSPHERE_PROG_SNAPSHOT_TAKEN
@@ -810,13 +810,13 @@ class VsphereConnector(BaseConnector):
 
         # now check if it needs to be downloaded
         download = bool(param[phantom.APP_JSON_DOWNLOAD]) if (phantom.APP_JSON_DOWNLOAD in param) else True
-        if (download):
+        if download:
             # set the action result to failure
             self.set_status(phantom.APP_ERROR)
             id = None
-            if (state_not_changed):
+            if state_not_changed:
                 snap_name, id = self._get_latest_snapshot_info(vm)
-                if (not snap_name or not id):
+                if not snap_name or not id:
                     return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_FAILED_TO_GET_SNAPSHOT_INFO)
                 self.debug_print("Latest snapshot: {0} with id {1}".format(snap_name, id))
 
@@ -830,7 +830,7 @@ class VsphereConnector(BaseConnector):
         # Connect to the server
         status_code = self._connect_to_server(config)
 
-        if (phantom.is_fail(status_code)):
+        if phantom.is_fail(status_code):
             return status_code
 
         # create an action_result to represent this item
@@ -848,14 +848,16 @@ class VsphereConnector(BaseConnector):
         # get the snapshot name
         snap_name = param.get(VSPHERE_JSON_SNAP_NAME)
 
-        if (snap_name is not None):
-            task = vm.revert_to_named_snapshot(snap_name, sync_run=False)
-        else:
-            task = vm.revert_to_snapshot(sync_run=False)
+        try:
+            if snap_name is not None:
+                task = vm.revert_to_named_snapshot(snap_name, sync_run=False)
+            else:
+                task = vm.revert_to_snapshot(sync_run=False)
+            status_code = self._wait_for_async_task(task, action, action_result)
+        except Exception as e:
+            return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_FAILED_TO_REVERT_VM, err_msg=str(e))
 
-        status_code = self._wait_for_async_task(task, action, action_result)
-
-        if (phantom.is_fail(status_code)):
+        if phantom.is_fail(status_code):
             return status_code
         else:
             action_result.set_status(phantom.APP_SUCCESS, phantom.APP_SUCC_CMD_EXEC)
@@ -876,7 +878,7 @@ class VsphereConnector(BaseConnector):
         # Connect to the server
         status_code = self._connect_to_server(config)
 
-        if (phantom.is_fail(status_code)):
+        if phantom.is_fail(status_code):
             return status_code
 
         # create an action_result to represent this item
@@ -893,10 +895,10 @@ class VsphereConnector(BaseConnector):
 
         task = None
         # Only suspend if not suspended
-        if (not vm.is_suspended()):
+        if not vm.is_suspended():
             task = vm.suspend(sync_run=False)
             status_code = self._wait_for_async_task(task, action, action_result)
-            if (phantom.is_fail(status_code)):
+            if phantom.is_fail(status_code):
                 return status_code
             else:
                 action_result.set_status(phantom.APP_SUCCESS, phantom.APP_SUCC_CMD_EXEC)
@@ -908,14 +910,14 @@ class VsphereConnector(BaseConnector):
 
         # either the vm was already suspended or we were able to do it now check if it needs to be downloaded
         download = param[phantom.APP_JSON_DOWNLOAD] if (phantom.APP_JSON_DOWNLOAD in param) else False
-        if (download):
+        if download:
             status_code = self._download_suspend_file(vmx_path, config, action_result, vm, container_id, datacenter)
 
         return action_result.get_status()
 
     def _test_asset_connectivity(self, config, param):
 
-        if (phantom.is_fail(self._connect_to_server(config))):
+        if phantom.is_fail(self._connect_to_server(config)):
             self.debug_print("connect failed")
             self.save_progress(VSPHERE_ERR_CONNECTIVITY_TEST)
             return self.append_to_message(VSPHERE_ERR_CONNECTIVITY_TEST)
@@ -960,8 +962,8 @@ class VsphereConnector(BaseConnector):
         # This throws an exception sometimes stating that server is not connected
         # even when is_connected returns True, could happen if the remote end disconnects.
         try:
-            if (self._vs_server.is_connected()):
-                    self._vs_server.disconnect()
+            if self._vs_server.is_connected():
+                self._vs_server.disconnect()
         except:
             pass
 
@@ -974,7 +976,7 @@ if __name__ == '__main__':
     pudb.set_trace()
 
     if (len(sys.argv) < 2):
-        print "No test json specified as input"
+        print("No test json specified as input")
         exit(0)
 
     with open(sys.argv[1]) as f:
@@ -985,6 +987,6 @@ if __name__ == '__main__':
         connector = VsphereConnector()
         connector.print_progress_message = True
         ret_val = connector._handle_action(json.dumps(in_json), None)
-        print json.dumps(json.loads(ret_val), indent=4)
+        print(json.dumps(json.loads(ret_val), indent=4))
 
     exit(0)
