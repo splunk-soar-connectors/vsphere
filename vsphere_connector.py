@@ -261,7 +261,7 @@ class VsphereConnector(BaseConnector):
         # [datacenter_name][datastore_name] <vm_folder>.<vmname>.vmx
         # for e.g. [Datacenter][DAS_labesxi1_1] OpenVAS/OpenVAS.vmx
 
-        search = re.search("\[(.*)\](\[.*)", full_vmx_path)
+        search = re.search(r"\[(.*)\](\[.*)", full_vmx_path)
         if not search:
             return VSPHERE_CONST_DEFAULT_DATACENTER, full_vmx_path
 
@@ -535,7 +535,7 @@ class VsphereConnector(BaseConnector):
             for line in f:
                 # extract the snapshot index and values that we are interested in
                 # file name
-                m = re.search('snapshot([0-9]+)\.filename[ ]*=[ ]*"(.*)"', line)
+                m = re.search(r'snapshot([0-9]+)\.filename[ ]*=[ ]*"(.*)"', line)
                 if m:
                     index = m.group(1)
                     file_name = m.group(2)
@@ -555,7 +555,7 @@ class VsphereConnector(BaseConnector):
                     continue
 
                 # display name
-                m = re.search('snapshot([0-9]+)\.displayName[ ]*=[ ]*"(.*)"', line)
+                m = re.search(r'snapshot([0-9]+)\.displayName[ ]*=[ ]*"(.*)"', line)
                 if m:
                     index = m.group(1)
                     display_name = m.group(2)
@@ -576,7 +576,7 @@ class VsphereConnector(BaseConnector):
                     continue
 
                 if id is not None:
-                    m = re.search('snapshot([0-9]+)\.uid[ ]*=[ ]*"(.*)"', line)
+                    m = re.search(r'snapshot([0-9]+)\.uid[ ]*=[ ]*"(.*)"', line)
                     if m:
                         index = m.group(1)
                         snap_id = m.group(2)
