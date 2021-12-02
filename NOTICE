@@ -1,0 +1,20 @@
+Splunk SOAR vSphere
+Copyright 2021 Splunk Inc.
+
+Third-party Software Attributions:
+
+Library: pysphere
+Version: 0.1.7
+License: BSD 3
+Copyright 2012 Sebastian Tello
+Copyright 2003 The Regents of the University of California,
+
+Library: pudb
+Version: 2019.2
+License: MIT
+Copyright 2009 Andreas Kloeckner and contributors
+
+Library: requests
+Version: 2.25.0
+License: Apache 2.0
+Kenneth Reitz
