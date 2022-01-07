@@ -3,6 +3,11 @@ Copyright (c) 2016-2021 Splunk Inc.
 
 Third-party Software Attributions:
 
+Library: pysphere
+Version: 0.1.8
+License: BSD
+Copyright (c) 2012, Sebastian Tello All rights reserved.
+
 Library: requests
 Version: 2.25.0
 License: Apache 2.0
