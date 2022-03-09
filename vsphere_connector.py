@@ -518,7 +518,7 @@ class VsphereConnector(BaseConnector):
         params = {x: url_to_download[x] for x in keys}
 
         try:
-            r = requests.get(url_to_download[VSPHERE_CONST_URL], params=params, verify=self._verify, auth=self._auth, stream=True)
+            r = requests.get(url_to_download[VSPHERE_CONST_URL], params=params, verify=self._verify, auth=self._auth, stream=True, timeout=30)
         except Exception as e:
             return (action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_SERVER_CONNECTION, e), content_size)
 
@@ -1020,7 +1020,7 @@ if __name__ == '__main__':
 
     if (len(sys.argv) < 2):
         print("No test json specified as input")
-        exit(0)
+        sys.exit(0)
 
     with open(sys.argv[1]) as f:
         in_json = f.read()
@@ -1032,4 +1032,4 @@ if __name__ == '__main__':
         ret_val = connector._handle_action(json.dumps(in_json), None)
         print(json.dumps(json.loads(ret_val), indent=4))
 
-    exit(0)
+    sys.exit(0)
