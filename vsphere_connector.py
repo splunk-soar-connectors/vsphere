@@ -29,9 +29,9 @@ import requests
 from phantom.action_result import ActionResult
 from phantom.base_connector import BaseConnector
 from phantom.vault import Vault
+from pysphere import VIServer
 from requests.auth import HTTPBasicAuth
 
-from pysphere import VIServer
 # THIS Connector imports
 from vsphere_consts import *
 
@@ -344,7 +344,7 @@ class VsphereConnector(BaseConnector):
         """
 
         return self._handle_start_stop_guest(action,config,param)
-    
+
     def _handle_stop_guest(self, action, config, param):
         """Function that handles ACTION_ID_STOP_GUEST action
 
