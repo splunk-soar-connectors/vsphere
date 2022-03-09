@@ -15,27 +15,25 @@
 #
 #
 # Phantom imports
-import phantom.app as phantom
-import phantom.rules as ph_rules
-
-from phantom.base_connector import BaseConnector
-from phantom.action_result import ActionResult
-
-from phantom.vault import Vault
-
-# THIS Connector imports
-from vsphere_consts import *
-
 import os
 import re
 import ssl
-from collections import defaultdict
-from pysphere import VIServer
 import time
-from time import mktime
-import requests
-from requests.auth import HTTPBasicAuth
+from collections import defaultdict
 from tempfile import mkdtemp
+from time import mktime
+
+import phantom.app as phantom
+import phantom.rules as ph_rules
+import requests
+from phantom.action_result import ActionResult
+from phantom.base_connector import BaseConnector
+from phantom.vault import Vault
+from requests.auth import HTTPBasicAuth
+
+from pysphere import VIServer
+# THIS Connector imports
+from vsphere_consts import *
 
 
 class VsphereConnector(BaseConnector):
@@ -667,7 +665,8 @@ class VsphereConnector(BaseConnector):
         os.remove(local_file_path)
 
         local_file_path = '{0}/{1}-{2}'.format(temp_dir,
-                phantom.get_valid_file_name(phantom.get_valid_file_name(snap_name)), phantom.get_file_name_from_url(snap_file_url[VSPHERE_CONST_URL]))
+                phantom.get_valid_file_name(phantom.get_valid_file_name(snap_name)),
+                    phantom.get_file_name_from_url(snap_file_url[VSPHERE_CONST_URL]))
 
         self.save_progress(VSPHERE_PROG_SNAPSHOT_DOWNLOADING, snap_name=snap_name)
         status_code, content_size = self._download_file(snap_file_url, action_result, local_file_path)
@@ -980,8 +979,9 @@ class VsphereConnector(BaseConnector):
 
 if __name__ == '__main__':
 
-    import sys
     import json
+    import sys
+
     import pudb
     pudb.set_trace()
 
