@@ -119,6 +119,7 @@ class VsphereConnector(BaseConnector):
             return status_code
 
         # Add the action result
+        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         total_vms = 0
@@ -219,6 +220,15 @@ class VsphereConnector(BaseConnector):
         action_result.update_summary({VSPHERE_JSON_TOTAL_GUESTS_RUNNING: total_running})
 
         action_result.set_status(phantom.APP_SUCCESS)
+
+    def _list_vms(self, action, config, param):
+        """Function that handles ACTION_ID_GET_REGISTERED_GUESTS
+            Args:
+
+            Return:
+                A status code
+        """
+        return self._get_vms(action, config, param)
 
     def _wait_for_async_task(self, task, action, action_result):
         """Function that asynchronously manages the task object
@@ -323,6 +333,27 @@ class VsphereConnector(BaseConnector):
                     action=action, state=vm.get_status())
 
         return action_result.get_status()
+
+    def _handle_start_guest(self, action, config, param):
+        """Function that handles ACTION_ID_START_GUEST action
+
+            Args:
+
+            Return:
+                A status code
+        """
+
+        return self._handle_start_stop_guest(action,config,param)
+    
+    def _handle_stop_guest(self, action, config, param):
+        """Function that handles ACTION_ID_STOP_GUEST action
+
+            Args:
+
+            Return:
+                A status code
+        """
+        return self._handle_start_stop_guest(action,config,param)
 
     def _create_url_from_path(self, server, vm_file_path, datacenter):
         """Function that creates a url from the path
@@ -833,7 +864,7 @@ class VsphereConnector(BaseConnector):
 
         return action_result.get_status()
 
-    def _revert_snapshot(self, action, config, param):
+    def _revert_vm(self, action, config, param):
         """"""
 
         # Connect to the server
@@ -946,14 +977,16 @@ class VsphereConnector(BaseConnector):
 
         if (action == self.ACTION_ID_GET_REGISTERED_GUESTS) or (action == self.ACTION_ID_GET_RUNNING_GUESTS):
             result = self._get_vms(action, config, param)
-        elif(action == self.ACTION_ID_START_GUEST) or (action == self.ACTION_ID_STOP_GUEST):
-            result = self._handle_start_stop_guest(action, config, param)
+        elif (action == self.ACTION_ID_START_GUEST):
+            result = self._handle_start_guest(action, config, param)
+        elif (action == self.ACTION_ID_STOP_GUEST):
+            result = self._handle_stop_guest(action, config, param)
         elif(action == self.ACTION_ID_SUSPEND_GUEST):
             result = self._handle_suspend_guest(action, config, param, container_id)
         elif (action == self.ACTION_ID_TAKE_SNAPSHOT):
             result = self._handle_take_snapshot(action, config, param, container_id)
         elif (action == self.ACTION_ID_REVERT_VM):
-            result = self._revert_snapshot(action, config, param)
+            result = self._revert_vm(action, config, param)
         elif (action == self.ACTION_ID_GET_SYSTEM_INFO):
             result = self._get_system_info(config, param)
         elif (action == phantom.ACTION_ID_TEST_ASSET_CONNECTIVITY):
