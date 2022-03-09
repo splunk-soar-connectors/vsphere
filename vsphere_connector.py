@@ -184,6 +184,7 @@ class VsphereConnector(BaseConnector):
             return status_code
 
         # Add the action result
+        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         total_vms = 0
@@ -304,6 +305,7 @@ class VsphereConnector(BaseConnector):
             return status_code
 
         # create an action_result
+        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         # get the config
@@ -343,7 +345,7 @@ class VsphereConnector(BaseConnector):
                 A status code
         """
 
-        return self._handle_start_stop_guest(action,config,param)
+        return self._handle_start_stop_guest(action, config, param)
 
     def _handle_stop_guest(self, action, config, param):
         """Function that handles ACTION_ID_STOP_GUEST action
@@ -353,7 +355,7 @@ class VsphereConnector(BaseConnector):
             Return:
                 A status code
         """
-        return self._handle_start_stop_guest(action,config,param)
+        return self._handle_start_stop_guest(action, config, param)
 
     def _create_url_from_path(self, server, vm_file_path, datacenter):
         """Function that creates a url from the path
@@ -874,6 +876,7 @@ class VsphereConnector(BaseConnector):
             return status_code
 
         # create an action_result to represent this item
+        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         # The path will contain the datacenter also
