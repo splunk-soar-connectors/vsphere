@@ -1,2 +1,2 @@
-git+https://github.com/phantomcyber/pysphere.git@soar-v1.0 #pysphere=0.1.8
+git+https://github.com/phantomcyber/pysphere.git@0.1.8-py3 #pysphere=0.1.8
 requests==2.25.0
