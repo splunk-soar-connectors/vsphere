@@ -71,4 +71,5 @@ VSPHERE_CONST_DATASTORE = "dsName"
 # This text is compared with an error that we get from the vsphere server, don't change
 # If you need to change this, then change this value to a list and add the newer string to it.
 # In the code compare it with the list
-VSPHERE_VIRTUAL_MACHINE_NOT_CHANGED = "Snapshot not taken since the state of the virtual machine has not changed since the last snapshot operation"
+VSPHERE_VIRTUAL_MACHINE_NOT_CHANGED = "Snapshot not taken "\
+    "since the state of the virtual machine has not changed since the last snapshot operation"
