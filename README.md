@@ -2,16 +2,16 @@
 # vSphere
 
 Publisher: Splunk  
-Connector Version: 2\.0\.4  
+Connector Version: 2\.0\.5  
 Product Vendor: VMware  
 Product Name: vSphere  
 Product Version Supported (regex): "\.\*"  
-Minimum Product Version: 5\.0\.0  
+Minimum Product Version: 5\.1\.0  
 
 This app implements investigative, containment and VM management actions on VMware ESXi or vCenter server
 
-[comment]: # " File: readme.md"
-[comment]: # "  Copyright (c) 2016-2021 Splunk Inc."
+[comment]: # " File: README.md"
+[comment]: # "  Copyright (c) 2016-2022 Splunk Inc."
 [comment]: # ""
 [comment]: # "Licensed under the Apache License, Version 2.0 (the 'License');"
 [comment]: # "you may not use this file except in compliance with the License."
