@@ -11,7 +11,7 @@
     "product_vendor": "VMware",
     "product_name": "vSphere",
     "product_version_regex": ".*",
-    "min_phantom_version": "5.1.0",
+    "min_phantom_version": "5.2.0",
     "python_version": "3",
     "fips_compliant": true,
     "latest_tested_versions": [
