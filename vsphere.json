@@ -5,33 +5,46 @@
     "publisher": "Splunk",
     "type": "virtualization",
     "main_module": "vsphere_connector.py",
-    "app_version": "2.0.2",
-    "utctime_updated": "2021-03-05T23:02:57.000000Z",
+    "app_version": "2.0.5",
+    "utctime_updated": "2022-01-07T20:38:40.000000Z",
     "package_name": "phantom_vsphere",
     "product_vendor": "VMware",
     "product_name": "vSphere",
     "product_version_regex": ".*",
-    "min_phantom_version": "4.9.39220",
+    "min_phantom_version": "5.2.0",
     "python_version": "3",
+    "fips_compliant": true,
     "latest_tested_versions": [
         "VMware ESXi v6.0.0"
     ],
     "logo": "logo_vsphere.svg",
     "logo_dark": "logo_vsphere_dark.svg",
-    "license": "Copyright (c) 2016-2021 Splunk Inc.",
+    "license": "Copyright (c) 2016-2022 Splunk Inc.",
     "pip_dependencies": {
         "wheel": [
             {
-                "module": "pysphere",
-                "input_file": "wheels/pysphere-0.1.7-py2-none-any.whl"
-            }
-        ]
-    },
-    "pip3_dependencies": {
-        "wheel": [
+                "module": "certifi",
+                "input_file": "wheels/shared/certifi-2021.10.8-py2.py3-none-any.whl"
+            },
+            {
+                "module": "chardet",
+                "input_file": "wheels/shared/chardet-3.0.4-py2.py3-none-any.whl"
+            },
+            {
+                "module": "idna",
+                "input_file": "wheels/shared/idna-2.10-py2.py3-none-any.whl"
+            },
             {
                 "module": "pysphere",
-                "input_file": "wheels/pysphere-0.1.8-py3-none-any.whl"
+                "input_file": "wheels/py3/pysphere-0.1.8-py3-none-any.whl"
+            },
+            {
+                "module": "requests",
+                "input_file": "wheels/shared/requests-2.25.0-py2.py3-none-any.whl"
+            },
+            {
+                "module": "urllib3",
+                "input_file": "wheels/shared/urllib3-1.26.8-py2.py3-none-any.whl"
             }
         ]
     },
@@ -438,7 +451,7 @@
         {
             "action": "suspend vm",
             "description": "Suspend a VM",
-            "verbose": "The <b>start vm</b> action can be used to resume a suspended vm",
+            "verbose": "The <b>start vm</b> action can be used to resume a suspended vm.",
             "type": "contain",
             "identifier": "suspend_guest",
             "read_only": false,

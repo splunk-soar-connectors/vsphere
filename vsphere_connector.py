@@ -1,31 +1,39 @@
 # File: vsphere_connector.py
-# Copyright (c) 2016-2021 Splunk Inc.
 #
-# SPLUNK CONFIDENTIAL - Use or disclosure of this material in whole or in part
-# without a valid written license from Splunk Inc. is PROHIBITED.
-
+# Copyright (c) 2016-2022 Splunk Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions
+# and limitations under the License.
+#
+#
 # Phantom imports
-import phantom.app as phantom
-import phantom.rules as ph_rules
-
-from phantom.base_connector import BaseConnector
-from phantom.action_result import ActionResult
-
-from phantom.vault import Vault
-
-# THIS Connector imports
-from vsphere_consts import *
-
 import os
 import re
 import ssl
-from collections import defaultdict
-from pysphere import VIServer
 import time
-from time import mktime
-import requests
-from requests.auth import HTTPBasicAuth
+from collections import defaultdict
 from tempfile import mkdtemp
+from time import mktime
+
+import phantom.app as phantom
+import phantom.rules as ph_rules
+import requests
+from phantom.action_result import ActionResult
+from phantom.base_connector import BaseConnector
+from phantom.vault import Vault
+from pysphere import VIServer
+from requests.auth import HTTPBasicAuth
+
+# THIS Connector imports
+from vsphere_consts import *
 
 
 class VsphereConnector(BaseConnector):
@@ -111,6 +119,7 @@ class VsphereConnector(BaseConnector):
             return status_code
 
         # Add the action result
+        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         total_vms = 0
@@ -175,6 +184,7 @@ class VsphereConnector(BaseConnector):
             return status_code
 
         # Add the action result
+        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         total_vms = 0
@@ -211,6 +221,15 @@ class VsphereConnector(BaseConnector):
         action_result.update_summary({VSPHERE_JSON_TOTAL_GUESTS_RUNNING: total_running})
 
         action_result.set_status(phantom.APP_SUCCESS)
+
+    def _list_vms(self, action, config, param):
+        """Function that handles ACTION_ID_GET_REGISTERED_GUESTS
+            Args:
+
+            Return:
+                A status code
+        """
+        return self._get_vms(action, config, param)
 
     def _wait_for_async_task(self, task, action, action_result):
         """Function that asynchronously manages the task object
@@ -261,7 +280,7 @@ class VsphereConnector(BaseConnector):
         # [datacenter_name][datastore_name] <vm_folder>.<vmname>.vmx
         # for e.g. [Datacenter][DAS_labesxi1_1] OpenVAS/OpenVAS.vmx
 
-        search = re.search("\[(.*)\](\[.*)", full_vmx_path)
+        search = re.search(r"\[(.*)\](\[.*)", full_vmx_path)
         if not search:
             return VSPHERE_CONST_DEFAULT_DATACENTER, full_vmx_path
 
@@ -286,6 +305,7 @@ class VsphereConnector(BaseConnector):
             return status_code
 
         # create an action_result
+        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         # get the config
@@ -315,6 +335,27 @@ class VsphereConnector(BaseConnector):
                     action=action, state=vm.get_status())
 
         return action_result.get_status()
+
+    def _handle_start_guest(self, action, config, param):
+        """Function that handles ACTION_ID_START_GUEST action
+
+            Args:
+
+            Return:
+                A status code
+        """
+
+        return self._handle_start_stop_guest(action, config, param)
+
+    def _handle_stop_guest(self, action, config, param):
+        """Function that handles ACTION_ID_STOP_GUEST action
+
+            Args:
+
+            Return:
+                A status code
+        """
+        return self._handle_start_stop_guest(action, config, param)
 
     def _create_url_from_path(self, server, vm_file_path, datacenter):
         """Function that creates a url from the path
@@ -479,7 +520,7 @@ class VsphereConnector(BaseConnector):
         params = {x: url_to_download[x] for x in keys}
 
         try:
-            r = requests.get(url_to_download[VSPHERE_CONST_URL], params=params, verify=self._verify, auth=self._auth, stream=True)
+            r = requests.get(url_to_download[VSPHERE_CONST_URL], params=params, verify=self._verify, auth=self._auth, stream=True, timeout=30)
         except Exception as e:
             return (action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_SERVER_CONNECTION, e), content_size)
 
@@ -535,7 +576,7 @@ class VsphereConnector(BaseConnector):
             for line in f:
                 # extract the snapshot index and values that we are interested in
                 # file name
-                m = re.search('snapshot([0-9]+)\.filename[ ]*=[ ]*"(.*)"', line)
+                m = re.search(r'snapshot([0-9]+)\.filename[ ]*=[ ]*"(.*)"', line)
                 if m:
                     index = m.group(1)
                     file_name = m.group(2)
@@ -555,7 +596,7 @@ class VsphereConnector(BaseConnector):
                     continue
 
                 # display name
-                m = re.search('snapshot([0-9]+)\.displayName[ ]*=[ ]*"(.*)"', line)
+                m = re.search(r'snapshot([0-9]+)\.displayName[ ]*=[ ]*"(.*)"', line)
                 if m:
                     index = m.group(1)
                     display_name = m.group(2)
@@ -576,7 +617,7 @@ class VsphereConnector(BaseConnector):
                     continue
 
                 if id is not None:
-                    m = re.search('snapshot([0-9]+)\.uid[ ]*=[ ]*"(.*)"', line)
+                    m = re.search(r'snapshot([0-9]+)\.uid[ ]*=[ ]*"(.*)"', line)
                     if m:
                         index = m.group(1)
                         snap_id = m.group(2)
@@ -657,7 +698,8 @@ class VsphereConnector(BaseConnector):
         os.remove(local_file_path)
 
         local_file_path = '{0}/{1}-{2}'.format(temp_dir,
-                phantom.get_valid_file_name(phantom.get_valid_file_name(snap_name)), phantom.get_file_name_from_url(snap_file_url[VSPHERE_CONST_URL]))
+                phantom.get_valid_file_name(phantom.get_valid_file_name(snap_name)),
+                    phantom.get_file_name_from_url(snap_file_url[VSPHERE_CONST_URL]))
 
         self.save_progress(VSPHERE_PROG_SNAPSHOT_DOWNLOADING, snap_name=snap_name)
         status_code, content_size = self._download_file(snap_file_url, action_result, local_file_path)
@@ -824,7 +866,7 @@ class VsphereConnector(BaseConnector):
 
         return action_result.get_status()
 
-    def _revert_snapshot(self, action, config, param):
+    def _revert_vm(self, action, config, param):
         """"""
 
         # Connect to the server
@@ -834,6 +876,7 @@ class VsphereConnector(BaseConnector):
             return status_code
 
         # create an action_result to represent this item
+        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         # The path will contain the datacenter also
@@ -937,14 +980,16 @@ class VsphereConnector(BaseConnector):
 
         if (action == self.ACTION_ID_GET_REGISTERED_GUESTS) or (action == self.ACTION_ID_GET_RUNNING_GUESTS):
             result = self._get_vms(action, config, param)
-        elif(action == self.ACTION_ID_START_GUEST) or (action == self.ACTION_ID_STOP_GUEST):
-            result = self._handle_start_stop_guest(action, config, param)
+        elif (action == self.ACTION_ID_START_GUEST):
+            result = self._handle_start_guest(action, config, param)
+        elif (action == self.ACTION_ID_STOP_GUEST):
+            result = self._handle_stop_guest(action, config, param)
         elif(action == self.ACTION_ID_SUSPEND_GUEST):
             result = self._handle_suspend_guest(action, config, param, container_id)
         elif (action == self.ACTION_ID_TAKE_SNAPSHOT):
             result = self._handle_take_snapshot(action, config, param, container_id)
         elif (action == self.ACTION_ID_REVERT_VM):
-            result = self._revert_snapshot(action, config, param)
+            result = self._revert_vm(action, config, param)
         elif (action == self.ACTION_ID_GET_SYSTEM_INFO):
             result = self._get_system_info(config, param)
         elif (action == phantom.ACTION_ID_TEST_ASSET_CONNECTIVITY):
@@ -970,14 +1015,15 @@ class VsphereConnector(BaseConnector):
 
 if __name__ == '__main__':
 
-    import sys
     import json
+    import sys
+
     import pudb
     pudb.set_trace()
 
     if (len(sys.argv) < 2):
         print("No test json specified as input")
-        exit(0)
+        sys.exit(0)
 
     with open(sys.argv[1]) as f:
         in_json = f.read()
@@ -989,4 +1035,4 @@ if __name__ == '__main__':
         ret_val = connector._handle_action(json.dumps(in_json), None)
         print(json.dumps(json.loads(ret_val), indent=4))
 
-    exit(0)
+    sys.exit(0)
