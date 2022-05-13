@@ -32,6 +32,9 @@ from phantom.vault import Vault
 from pysphere import VIServer
 from requests.auth import HTTPBasicAuth
 
+from pyVim.connect import SmartConnect, Disconnect
+from pyVmomi import vim
+
 # THIS Connector imports
 from vsphere_consts import *
 
@@ -83,15 +86,6 @@ class VsphereConnector(BaseConnector):
                 A status code
         """
 
-        if self._vs_server.is_connected():
-            return phantom.APP_SUCCESS
-
-        if self._verify is False:
-            try:
-                ssl._create_default_https_context = ssl._create_unverified_context
-            except:
-                pass
-
         server = config[phantom.APP_JSON_SERVER]
         username = config[phantom.APP_JSON_USERNAME]
         password = config[phantom.APP_JSON_PASSWORD]
@@ -99,14 +93,28 @@ class VsphereConnector(BaseConnector):
         self.save_progress(phantom.APP_PROG_CONNECTING_TO_ELLIPSES, server)
 
         try:
-            self._vs_server.connect(server, username, password)
+
+            if self._verify is False:
+
+                context = ssl._create_unverified_context()
+
+                self._vs_server = SmartConnect(
+                    host=server,
+                    user=username,
+                    pwd=password,
+                    sslContext=context
+                )
+
+            else:
+
+                self._vs_server = SmartConnect(
+                    host=server,
+                    user=username,
+                    pwd=password
+                )
+
         except Exception as e:
-            return self.set_status_save_progress(phantom.APP_ERROR, VSPHERE_ERR_SERVER_CONNECT, e, server_ip=server)
-
-        # Get the datacenters
-        datacenters = self._vs_server.get_datacenters()
-
-        self._datacenters = [v for k, v in datacenters.items()]
+            return self.set_status_save_progress(phantom.APP_ERROR, VSPHERE_ERR_SERVER_CONNECT, e)
 
         return phantom.APP_SUCCESS
 
@@ -176,48 +184,29 @@ class VsphereConnector(BaseConnector):
             Return:
                 A status code
         """
-
-        # Connect to the server
-        status_code = self._connect_to_server(config)
-
-        if phantom.is_fail(status_code):
-            return status_code
+        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
 
         # Add the action result
-        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
         action_result = self.add_action_result(ActionResult(dict(param)))
 
-        total_vms = 0
+        # Connect to the server
+        if phantom.is_fail(self._connect_to_server(config)):
+            return status_code
+
+        content = self._vs_server.RetrieveContent()
+        root = content.rootFolder
+        container = content.viewManager.CreateContainerView(root, [vim.VirtualMachine], True)
+
         total_running = 0
 
-        for datacenter in self._datacenters:
+        for vm in container.view:
 
-            if action == self.ACTION_ID_GET_RUNNING_GUESTS:
-                vm_list = self._vs_server.get_registered_vms(status='poweredOn', datacenter=datacenter)
-            else:
-                vm_list = self._vs_server.get_registered_vms(datacenter=datacenter)
-
-            total_vms += len(vm_list)
-
-            for curr_vmx_path in vm_list:
-
-                # get the vm object
-                vm = self._vs_server.get_vm_by_path(curr_vmx_path, datacenter)
-                curr_data = action_result.add_data({})
-                curr_data[VSPHERE_JSON_VMX_PATH] = "[{0}]".format(datacenter) + curr_vmx_path
-                curr_data[phantom.APP_JSON_IP] = vm.get_property('ip_address')
-                curr_data[VSPHERE_JSON_GUEST_NAME] = vm.get_property('name')
-                curr_data[VSPHERE_JSON_GUEST_HOST_NAME] = vm.get_property('hostname')
-                curr_data[VSPHERE_JSON_GUEST_FULL_NAME] = vm.get_property('guest_full_name')
-
-                if vm.is_powered_on():
-                    curr_data[phantom.APP_JSON_STATE] = VSPHERE_CONST_VM_STATE_RUNNING
-                    total_running += 1
-                else:
-                    curr_data[phantom.APP_JSON_STATE] = VSPHERE_CONST_VM_STATE_NOT_RUNNING
+            action_result.add_data(vm.summary)
+            if vm.overallStatus == 'green':
+                total_running += 1
 
         # update the summary value about the total guests
-        action_result.update_summary({VSPHERE_JSON_TOTAL_GUESTS: total_vms})
+        action_result.update_summary({VSPHERE_JSON_TOTAL_GUESTS: len(container.view)})
         action_result.update_summary({VSPHERE_JSON_TOTAL_GUESTS_RUNNING: total_running})
 
         action_result.set_status(phantom.APP_SUCCESS)
