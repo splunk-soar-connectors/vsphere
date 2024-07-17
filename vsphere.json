@@ -436,6 +436,10 @@
             "identifier": "suspend_guest",
             "read_only": false,
             "undo": "start vm",
+            "lock": {
+                "enabled": true,
+                "data_path": "parameters.vmx_path"
+            },
             "parameters": {
                 "vmx_path": {
                     "data_type": "string",
