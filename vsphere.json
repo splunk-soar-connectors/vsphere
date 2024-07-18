@@ -318,6 +318,10 @@
             "type": "contain",
             "identifier": "revert_vm",
             "read_only": false,
+            "lock": {
+                "enabled": true,
+                "concurrency": false
+            },
             "parameters": {
                 "vmx_path": {
                     "data_type": "string",
@@ -438,7 +442,7 @@
             "undo": "start vm",
             "lock": {
                 "enabled": true,
-                "data_path": "parameters.vmx_path"
+                "concurrency": false
             },
             "parameters": {
                 "vmx_path": {
