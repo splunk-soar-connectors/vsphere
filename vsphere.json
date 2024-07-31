@@ -265,6 +265,10 @@
             "identifier": "start_guest",
             "read_only": false,
             "undo": "suspend vm",
+            "lock": {
+                "enabled": true,
+                "concurrency": false
+            },
             "parameters": {
                 "vmx_path": {
                     "data_type": "string",
@@ -318,10 +322,6 @@
             "type": "contain",
             "identifier": "revert_vm",
             "read_only": false,
-            "lock": {
-                "enabled": true,
-                "concurrency": false
-            },
             "parameters": {
                 "vmx_path": {
                     "data_type": "string",
@@ -440,10 +440,6 @@
             "identifier": "suspend_guest",
             "read_only": false,
             "undo": "start vm",
-            "lock": {
-                "enabled": true,
-                "concurrency": false
-            },
             "parameters": {
                 "vmx_path": {
                     "data_type": "string",
@@ -538,6 +534,10 @@
             "type": "generic",
             "identifier": "take_snapshot",
             "read_only": false,
+            "lock": {
+                "enabled": true,
+                "concurrency": false
+            },
             "parameters": {
                 "vmx_path": {
                     "data_type": "string",
