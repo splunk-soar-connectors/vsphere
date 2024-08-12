@@ -242,5 +242,4 @@ action_result.summary | string |  |
 action_result.message | string |  |  
 action_result.message | string |  |  
 summary.total_objects | numeric |  |  
-summary.total_objects_successful | numeric |  |  
-  
+summary.total_objects_successful | numeric |  |
