@@ -6,7 +6,7 @@ Connector Version: 2.0.6
 Product Vendor: VMware  
 Product Name: vSphere  
 Product Version Supported (regex): ".\*"  
-Minimum Product Version: 5.2.0  
+Minimum Product Version: 6.2.1  
 
 This app implements investigative, containment and VM management actions on VMware ESXi or vCenter server
 
@@ -242,4 +242,4 @@ action_result.summary | string |  |
 action_result.message | string |  |  
 action_result.message | string |  |  
 summary.total_objects | numeric |  |  
-summary.total_objects_successful | numeric |  |
+summary.total_objects_successful | numeric |  |  
