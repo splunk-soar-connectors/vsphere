@@ -11,7 +11,7 @@
     "product_vendor": "VMware",
     "product_name": "vSphere",
     "product_version_regex": ".*",
-    "min_phantom_version": "5.2.0",
+    "min_phantom_version": "6.2.1",
     "python_version": "3",
     "fips_compliant": true,
     "latest_tested_versions": [
@@ -265,6 +265,10 @@
             "identifier": "start_guest",
             "read_only": false,
             "undo": "suspend vm",
+            "lock": {
+                "enabled": true,
+                "concurrency": false
+            },
             "parameters": {
                 "vmx_path": {
                     "data_type": "string",
@@ -530,6 +534,10 @@
             "type": "generic",
             "identifier": "take_snapshot",
             "read_only": false,
+            "lock": {
+                "enabled": true,
+                "concurrency": false
+            },
             "parameters": {
                 "vmx_path": {
                     "data_type": "string",
