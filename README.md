@@ -2,7 +2,7 @@
 # vSphere
 
 Publisher: Splunk  
-Connector Version: 2.0.6  
+Connector Version: 2.0.7  
 Product Vendor: VMware  
 Product Name: vSphere  
 Product Version Supported (regex): ".\*"  
