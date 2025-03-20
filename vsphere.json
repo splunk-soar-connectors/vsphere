@@ -19,7 +19,7 @@
     ],
     "logo": "logo_vsphere.svg",
     "logo_dark": "logo_vsphere_dark.svg",
-    "license": "Copyright (c) 2016-2024 Splunk Inc.",
+    "license": "Copyright (c) 2016-2025 Splunk Inc.",
     "pip_dependencies": {
         "wheel": [
             {

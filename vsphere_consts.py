@@ -1,6 +1,6 @@
 # File: vsphere_consts.py
 #
-# Copyright (c) 2016-2024 Splunk Inc.
+# Copyright (c) 2016-2025 Splunk Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ VSPHERE_JSON_TOTAL_GUESTS = "total_vms"
 VSPHERE_JSON_TOTAL_GUESTS_RUNNING = "running_vms"
 VSPHERE_JSON_GUEST_NAME = "vm_name"
 VSPHERE_JSON_GUEST_FULL_NAME = "vm_full_name"
-VSPHERE_JSON_DISPLAY_NAME = 'display_name'
+VSPHERE_JSON_DISPLAY_NAME = "display_name"
 VSPHERE_JSON_GUEST_HOST_NAME = "vm_hostname"
 VSPHERE_JSON_SNAP_NAME = "snapshot"
 VSPHERE_JSON_IP_HOSTNAME = "ip_hostname"
@@ -71,5 +71,6 @@ VSPHERE_CONST_DATASTORE = "dsName"
 # This text is compared with an error that we get from the vsphere server, don't change
 # If you need to change this, then change this value to a list and add the newer string to it.
 # In the code compare it with the list
-VSPHERE_VIRTUAL_MACHINE_NOT_CHANGED = "Snapshot not taken "\
-    "since the state of the virtual machine has not changed since the last snapshot operation"
+VSPHERE_VIRTUAL_MACHINE_NOT_CHANGED = (
+    "Snapshot not taken since the state of the virtual machine has not changed since the last snapshot operation"
+)
