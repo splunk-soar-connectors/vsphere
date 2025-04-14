@@ -1,7 +1,7 @@
 # vSphere
 
 Publisher: Splunk \
-Connector Version: 2.0.7 \
+Connector Version: 2.0.8 \
 Product Vendor: VMware \
 Product Name: vSphere \
 Minimum Product Version: 6.2.1
