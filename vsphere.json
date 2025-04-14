@@ -20,14 +20,6 @@
     "logo": "logo_vsphere.svg",
     "logo_dark": "logo_vsphere_dark.svg",
     "license": "Copyright (c) 2016-2025 Splunk Inc.",
-    "pip_dependencies": {
-        "wheel": [
-            {
-                "module": "pysphere",
-                "input_file": "wheels/py3/pysphere-0.1.8-py3-none-any.whl"
-            }
-        ]
-    },
     "configuration": {
         "server": {
             "data_type": "string",
@@ -644,5 +636,13 @@
             ],
             "versions": "EQ(*)"
         }
-    ]
+    ],
+    "pip39_dependencies": {
+        "wheel": [
+            {
+                "module": "pysphere",
+                "input_file": "wheels/py3/pysphere-0.1.8-py3-none-any.whl"
+            }
+        ]
+    }
 }
