@@ -5,14 +5,17 @@
     "publisher": "Splunk",
     "type": "virtualization",
     "main_module": "vsphere_connector.py",
-    "app_version": "2.0.8",
-    "utctime_updated": "2025-04-14T21:53:35.973627Z",
+    "app_version": "2.0.9",
+    "utctime_updated": "2025-07-30T17:56:45.671290Z",
     "package_name": "phantom_vsphere",
     "product_vendor": "VMware",
     "product_name": "vSphere",
     "product_version_regex": ".*",
     "min_phantom_version": "6.2.1",
-    "python_version": ["3.9", "3.13"],
+    "python_version": [
+        "3.9",
+        "3.13"
+    ],
     "fips_compliant": true,
     "latest_tested_versions": [
         "VMware ESXi v6.0.0"
