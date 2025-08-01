@@ -1,2 +1,1 @@
 **Unreleased**
-* Remove incompatible Python 3.13 upgrade
