@@ -4,7 +4,7 @@ Publisher: Splunk <br>
 Connector Version: 2.0.10 <br>
 Product Vendor: VMware <br>
 Product Name: vSphere <br>
-Minimum Product Version: 6.2.1
+Minimum Product Version: 6.3.0
 
 This app implements investigative, containment and VM management actions on VMware ESXi or vCenter server
 

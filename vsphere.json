@@ -638,5 +638,21 @@
             ],
             "versions": "EQ(*)"
         }
-    ]
+    ],
+    "pip39_dependencies": {
+        "wheel": [
+            {
+                "module": "pysphere",
+                "input_file": "wheels/py3/pysphere-0.1.8-py3-none-any.whl"
+            }
+        ]
+    },
+    "pip313_dependencies": {
+        "wheel": [
+            {
+                "module": "pysphere",
+                "input_file": "wheels/py3/pysphere-0.1.8-py3-none-any.whl"
+            }
+        ]
+    }
 }
