@@ -12,9 +12,7 @@
     "product_name": "vSphere",
     "product_version_regex": ".*",
     "min_phantom_version": "6.3.0",
-    "python_version": [
-        "3.9, 3.13"
-    ],
+    "python_version": "3.9, 3.13",
     "fips_compliant": true,
     "latest_tested_versions": [
         "VMware ESXi v6.0.0"
