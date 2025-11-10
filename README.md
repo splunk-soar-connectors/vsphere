@@ -1,10 +1,10 @@
 # vSphere
 
-Publisher: Splunk \
-Connector Version: 2.0.10 \
-Product Vendor: VMware \
-Product Name: vSphere \
-Minimum Product Version: 6.2.1
+Publisher: Splunk <br>
+Connector Version: 2.0.10 <br>
+Product Vendor: VMware <br>
+Product Name: vSphere <br>
+Minimum Product Version: 6.3.0
 
 This app implements investigative, containment and VM management actions on VMware ESXi or vCenter server
 
@@ -26,20 +26,20 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 
 ### Supported Actions
 
-[test connectivity](#action-test-connectivity) - Validate the asset configuration for connectivity. This action logs into the device to check the connection and credentials \
-[list vms](#action-list-vms) - Get the list of registered VMs \
-[get system info](#action-get-system-info) - Get information about a VM \
-[start vm](#action-start-vm) - Start a stopped or suspended VM \
-[revert vm](#action-revert-vm) - Revert VM to a named snapshot if name is specified, otherwise revert to the current snapshot \
-[stop vm](#action-stop-vm) - Stop a VM \
-[suspend vm](#action-suspend-vm) - Suspend a VM \
+[test connectivity](#action-test-connectivity) - Validate the asset configuration for connectivity. This action logs into the device to check the connection and credentials <br>
+[list vms](#action-list-vms) - Get the list of registered VMs <br>
+[get system info](#action-get-system-info) - Get information about a VM <br>
+[start vm](#action-start-vm) - Start a stopped or suspended VM <br>
+[revert vm](#action-revert-vm) - Revert VM to a named snapshot if name is specified, otherwise revert to the current snapshot <br>
+[stop vm](#action-stop-vm) - Stop a VM <br>
+[suspend vm](#action-suspend-vm) - Suspend a VM <br>
 [snapshot vm](#action-snapshot-vm) - Take a snapshot of the VM
 
 ## action: 'test connectivity'
 
 Validate the asset configuration for connectivity. This action logs into the device to check the connection and credentials
 
-Type: **test** \
+Type: **test** <br>
 Read only: **True**
 
 #### Action Parameters
@@ -54,7 +54,7 @@ No Output
 
 Get the list of registered VMs
 
-Type: **investigate** \
+Type: **investigate** <br>
 Read only: **True**
 
 #### Action Parameters
@@ -82,7 +82,7 @@ summary.total_objects_successful | numeric | | |
 
 Get information about a VM
 
-Type: **investigate** \
+Type: **investigate** <br>
 Read only: **True**
 
 #### Action Parameters
@@ -113,7 +113,7 @@ summary.total_objects_successful | numeric | | |
 
 Start a stopped or suspended VM
 
-Type: **correct** \
+Type: **correct** <br>
 Read only: **False**
 
 #### Action Parameters
@@ -138,7 +138,7 @@ summary.total_objects_successful | numeric | | |
 
 Revert VM to a named snapshot if name is specified, otherwise revert to the current snapshot
 
-Type: **contain** \
+Type: **contain** <br>
 Read only: **False**
 
 #### Action Parameters
@@ -165,7 +165,7 @@ summary.total_objects_successful | numeric | | |
 
 Stop a VM
 
-Type: **contain** \
+Type: **contain** <br>
 Read only: **False**
 
 #### Action Parameters
@@ -190,7 +190,7 @@ summary.total_objects_successful | numeric | | |
 
 Suspend a VM
 
-Type: **contain** \
+Type: **contain** <br>
 Read only: **False**
 
 The <b>start vm</b> action can be used to resume a suspended vm.
@@ -224,7 +224,7 @@ summary.total_objects_successful | numeric | | |
 
 Take a snapshot of the VM
 
-Type: **generic** \
+Type: **generic** <br>
 Read only: **False**
 
 #### Action Parameters

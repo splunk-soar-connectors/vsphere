@@ -11,10 +11,8 @@
     "product_vendor": "VMware",
     "product_name": "vSphere",
     "product_version_regex": ".*",
-    "min_phantom_version": "6.2.1",
-    "python_version": [
-        "3.9"
-    ],
+    "min_phantom_version": "6.3.0",
+    "python_version": "3.9, 3.13",
     "fips_compliant": true,
     "latest_tested_versions": [
         "VMware ESXi v6.0.0"
@@ -640,6 +638,14 @@
         }
     ],
     "pip39_dependencies": {
+        "wheel": [
+            {
+                "module": "pysphere",
+                "input_file": "wheels/py3/pysphere-0.1.8-py3-none-any.whl"
+            }
+        ]
+    },
+    "pip313_dependencies": {
         "wheel": [
             {
                 "module": "pysphere",
