@@ -150,8 +150,9 @@ class VsphereConnector(BaseConnector):
             # get the vm object properties
             ip = vm.summary.guest.ipAddress if vm.summary.guest else None
             hostname = vm.summary.guest.hostName if vm.summary.guest else None
+            name = vm.summary.config.name if vm.summary.config else None
 
-            if (ip_hostname != ip) and (ip_hostname != hostname):
+            if (ip_hostname != ip) and (ip_hostname != hostname) and (ip_hostname != name):
                 continue
 
             # Find the datacenter for the VM
@@ -168,7 +169,7 @@ class VsphereConnector(BaseConnector):
             vmx_path = vm.summary.config.vmPathName if vm.summary.config else ""
             curr_data[VSPHERE_JSON_VMX_PATH] = f"[{datacenter}]" + vmx_path
             curr_data[phantom.APP_JSON_IP] = ip
-            curr_data[VSPHERE_JSON_GUEST_NAME] = vm.summary.config.name if vm.summary.config else None
+            curr_data[VSPHERE_JSON_GUEST_NAME] = name
             curr_data[VSPHERE_JSON_GUEST_HOST_NAME] = hostname
             curr_data[VSPHERE_JSON_GUEST_FULL_NAME] = vm.summary.guest.guestFullName if vm.summary.guest else None
 
