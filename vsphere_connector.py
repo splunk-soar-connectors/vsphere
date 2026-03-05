@@ -947,7 +947,7 @@ class VsphereConnector(BaseConnector):
                     break
         except Exception as e:
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_VM_FROM_VMX_PATH, e)
-            
+
         if not vm:
             return action_result.set_status(phantom.APP_ERROR, "Could not find VM with path: " + vmx_path)
 
@@ -963,20 +963,20 @@ class VsphereConnector(BaseConnector):
                         child = find_snapshot_by_name(snap.childSnapshotList, name)
                         if child: return child
                     return None
-                    
+
                 snap_obj = None
                 if vm.snapshot:
                     snap_obj = find_snapshot_by_name(vm.snapshot.rootSnapshotList, snap_name)
-                    
+
                 if not snap_obj:
                     return action_result.set_status(phantom.APP_ERROR, f"Snapshot {snap_name} not found")
-                    
+
                 task = snap_obj.RevertToSnapshot_Task()
             else:
                 if not vm.snapshot or not vm.snapshot.currentSnapshot:
                     return action_result.set_status(phantom.APP_ERROR, "No current snapshot found")
                 task = vm.RevertToCurrentSnapshot_Task()
-                
+
             status_code = self._wait_for_async_task(task, action, action_result)
         except Exception as e:
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_FAILED_TO_REVERT_VM, err_msg=str(e))
@@ -1022,7 +1022,7 @@ class VsphereConnector(BaseConnector):
                     break
         except Exception as e:
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_VM_FROM_VMX_PATH, e)
-            
+
         if not vm:
             return action_result.set_status(phantom.APP_ERROR, "Could not find VM with path: " + vmx_path)
 
