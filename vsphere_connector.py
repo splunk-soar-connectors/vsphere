@@ -28,8 +28,10 @@ import phantom.rules as ph_rules
 import requests
 from phantom.action_result import ActionResult
 from phantom.base_connector import BaseConnector
+import ssl
 from phantom.vault import Vault
-from pysphere import VIServer
+from pyVim.connect import SmartConnect, Disconnect
+from pyVmomi import vim, vmodl
 from requests.auth import HTTPBasicAuth
 
 # THIS Connector imports
@@ -51,12 +53,9 @@ class VsphereConnector(BaseConnector):
         # Call the BaseConnectors init first
         super().__init__()
 
-        self._vs_server = None
+        self._service_instance = None
         self._datacenters = list()
         self._verify = False
-
-        # Connector result global object
-        self._vs_server = VIServer()
 
     def initialize(self):
         config = self.get_config()
@@ -70,6 +69,23 @@ class VsphereConnector(BaseConnector):
 
         return phantom.APP_SUCCESS
 
+    def _get_obj(self, content, vimtype, name=None):
+        obj = None
+        container = content.viewManager.CreateContainerView(content.rootFolder, vimtype, True)
+        for c in container.view:
+            if name:
+                if c.name == name:
+                    obj = c
+                    break
+            else:
+                obj = c
+                break
+        return obj
+
+    def _get_all_objs(self, content, vimtype):
+        container = content.viewManager.CreateContainerView(content.rootFolder, vimtype, True)
+        return container.view
+
     def _connect_to_server(self, config):
         """Function that logins to the vsphere server
 
@@ -80,12 +96,13 @@ class VsphereConnector(BaseConnector):
             A status code
         """
 
-        if self._vs_server.is_connected():
+        if self._service_instance:
             return phantom.APP_SUCCESS
 
+        context = None
         if self._verify is False:
             try:
-                ssl._create_default_https_context = ssl._create_unverified_context
+                context = ssl._create_unverified_context()
             except:
                 pass
 
@@ -96,14 +113,15 @@ class VsphereConnector(BaseConnector):
         self.save_progress(phantom.APP_PROG_CONNECTING_TO_ELLIPSES, server)
 
         try:
-            self._vs_server.connect(server, username, password)
+            self._service_instance = SmartConnect(host=server, user=username, pwd=password, sslContext=context)
         except Exception as e:
             return self.set_status_save_progress(phantom.APP_ERROR, VSPHERE_ERR_SERVER_CONNECT, e, server_ip=server)
 
         # Get the datacenters
-        datacenters = self._vs_server.get_datacenters()
+        content = self._service_instance.RetrieveContent()
+        datacenters = self._get_all_objs(content, [vim.Datacenter])
 
-        self._datacenters = [v for k, v in datacenters.items()]
+        self._datacenters = [dc.name for dc in datacenters]
 
         return phantom.APP_SUCCESS
 
@@ -123,37 +141,46 @@ class VsphereConnector(BaseConnector):
 
         ip_hostname = param[VSPHERE_JSON_IP_HOSTNAME]
 
-        for datacenter in self._datacenters:
-            vm_list = self._vs_server.get_registered_vms(datacenter=datacenter)
+        content = self._service_instance.RetrieveContent()
+        vms = self._get_all_objs(content, [vim.VirtualMachine])
 
-            total_vms += len(vm_list)
+        total_vms = len(vms)
 
-            for curr_vmx_path in vm_list:
-                # get the vm object
-                vm = self._vs_server.get_vm_by_path(curr_vmx_path, datacenter)
+        for vm in vms:
+            # get the vm object properties
+            ip = vm.summary.guest.ipAddress if vm.summary.guest else None
+            hostname = vm.summary.guest.hostName if vm.summary.guest else None
 
-                ip = vm.get_property("ip_address")
-                hostname = vm.get_property("hostname")
+            if (ip_hostname != ip) and (ip_hostname != hostname):
+                continue
 
-                if (ip_hostname != ip) and (ip_hostname != hostname):
-                    continue
+            # Find the datacenter for the VM
+            datacenter = ""
+            parent = vm.parent
+            while parent:
+                if isinstance(parent, vim.Datacenter):
+                    datacenter = parent.name
+                    break
+                parent = parent.parent
 
-                # one of the params matched
-                curr_data = action_result.add_data({})
-                curr_data[VSPHERE_JSON_VMX_PATH] = f"[{datacenter}]" + curr_vmx_path
-                curr_data[phantom.APP_JSON_IP] = ip
-                curr_data[VSPHERE_JSON_GUEST_NAME] = vm.get_property("name")
-                curr_data[VSPHERE_JSON_GUEST_HOST_NAME] = hostname
-                curr_data[VSPHERE_JSON_GUEST_FULL_NAME] = vm.get_property("guest_full_name")
+            # one of the params matched
+            curr_data = action_result.add_data({})
+            vmx_path = vm.summary.config.vmPathName if vm.summary.config else ""
+            curr_data[VSPHERE_JSON_VMX_PATH] = f"[{datacenter}]" + vmx_path
+            curr_data[phantom.APP_JSON_IP] = ip
+            curr_data[VSPHERE_JSON_GUEST_NAME] = vm.summary.config.name if vm.summary.config else None
+            curr_data[VSPHERE_JSON_GUEST_HOST_NAME] = hostname
+            curr_data[VSPHERE_JSON_GUEST_FULL_NAME] = vm.summary.guest.guestFullName if vm.summary.guest else None
 
-                if vm.is_powered_on():
-                    curr_data[phantom.APP_JSON_STATE] = VSPHERE_CONST_VM_STATE_RUNNING
-                else:
-                    curr_data[phantom.APP_JSON_STATE] = VSPHERE_CONST_VM_STATE_NOT_RUNNING
+            is_powered_on = vm.runtime.powerState == vim.VirtualMachine.PowerState.poweredOn
+            if is_powered_on:
+                curr_data[phantom.APP_JSON_STATE] = VSPHERE_CONST_VM_STATE_RUNNING
+            else:
+                curr_data[phantom.APP_JSON_STATE] = VSPHERE_CONST_VM_STATE_NOT_RUNNING
 
-                # Found the endpoint, so break
-                matched = True
-                break
+            # Found the endpoint, so break
+            matched = True
+            break
 
         # update the summary value about the total guests
         action_result.update_summary({"total_vms_searched": total_vms})
@@ -184,29 +211,39 @@ class VsphereConnector(BaseConnector):
         total_vms = 0
         total_running = 0
 
-        for datacenter in self._datacenters:
-            if action == self.ACTION_ID_GET_RUNNING_GUESTS:
-                vm_list = self._vs_server.get_registered_vms(status="poweredOn", datacenter=datacenter)
+        content = self._service_instance.RetrieveContent()
+        vms = self._get_all_objs(content, [vim.VirtualMachine])
+
+        for vm in vms:
+            is_powered_on = vm.runtime.powerState == vim.VirtualMachine.PowerState.poweredOn
+
+            if action == self.ACTION_ID_GET_RUNNING_GUESTS and not is_powered_on:
+                continue
+
+            total_vms += 1
+
+            # Find the datacenter for the VM
+            datacenter = ""
+            parent = vm.parent
+            while parent:
+                if isinstance(parent, vim.Datacenter):
+                    datacenter = parent.name
+                    break
+                parent = parent.parent
+
+            curr_data = action_result.add_data({})
+            vmx_path = vm.summary.config.vmPathName if vm.summary.config else ""
+            curr_data[VSPHERE_JSON_VMX_PATH] = f"[{datacenter}]" + vmx_path
+            curr_data[phantom.APP_JSON_IP] = vm.summary.guest.ipAddress if vm.summary.guest else None
+            curr_data[VSPHERE_JSON_GUEST_NAME] = vm.summary.config.name if vm.summary.config else None
+            curr_data[VSPHERE_JSON_GUEST_HOST_NAME] = vm.summary.guest.hostName if vm.summary.guest else None
+            curr_data[VSPHERE_JSON_GUEST_FULL_NAME] = vm.summary.guest.guestFullName if vm.summary.guest else None
+
+            if is_powered_on:
+                curr_data[phantom.APP_JSON_STATE] = VSPHERE_CONST_VM_STATE_RUNNING
+                total_running += 1
             else:
-                vm_list = self._vs_server.get_registered_vms(datacenter=datacenter)
-
-            total_vms += len(vm_list)
-
-            for curr_vmx_path in vm_list:
-                # get the vm object
-                vm = self._vs_server.get_vm_by_path(curr_vmx_path, datacenter)
-                curr_data = action_result.add_data({})
-                curr_data[VSPHERE_JSON_VMX_PATH] = f"[{datacenter}]" + curr_vmx_path
-                curr_data[phantom.APP_JSON_IP] = vm.get_property("ip_address")
-                curr_data[VSPHERE_JSON_GUEST_NAME] = vm.get_property("name")
-                curr_data[VSPHERE_JSON_GUEST_HOST_NAME] = vm.get_property("hostname")
-                curr_data[VSPHERE_JSON_GUEST_FULL_NAME] = vm.get_property("guest_full_name")
-
-                if vm.is_powered_on():
-                    curr_data[phantom.APP_JSON_STATE] = VSPHERE_CONST_VM_STATE_RUNNING
-                    total_running += 1
-                else:
-                    curr_data[phantom.APP_JSON_STATE] = VSPHERE_CONST_VM_STATE_NOT_RUNNING
+                curr_data[phantom.APP_JSON_STATE] = VSPHERE_CONST_VM_STATE_NOT_RUNNING
 
         # update the summary value about the total guests
         action_result.update_summary({VSPHERE_JSON_TOTAL_GUESTS: total_vms})
@@ -239,26 +276,26 @@ class VsphereConnector(BaseConnector):
         task_name = action.replace("_", " ")
 
         while True:
-            # interested in all states
-            status = task.wait_for_state(["success", "error", "queued", "running"])
+            status = task.info.state
 
-            if status == "error":
+            if status == vim.TaskInfo.State.error:
                 action_result.set_status(phantom.APP_ERROR, phantom.APP_ERR_CMD_EXEC)
-                action_result.append_to_message(task.get_error_message())
+                action_result.append_to_message(str(task.info.error.msg) if task.info.error else "Unknown error")
                 break
-            elif status == "success":
+            elif status == vim.TaskInfo.State.success:
                 action_result.set_status(phantom.APP_SUCCESS, phantom.APP_SUCC_CMD_EXEC)
                 break
-            elif status == "queued":
+            elif status == vim.TaskInfo.State.queued:
                 self.send_progress(VSPHERE_PROG_TASK_QUEUED)
-            elif status == "running":
-                progress = task.get_progress()
+            elif status == vim.TaskInfo.State.running:
+                progress = task.info.progress
                 if progress:
                     self.send_progress(VSPHERE_PROG_TASK_COMPLETED_PERCENT, task_name=task_name, progress=progress)
                 elif not displayed_once:
                     self.send_progress(VSPHERE_PROG_TASK_RUNNING)
                     displayed_once = True
 
+            import time
             time.sleep(2)
 
         return action_result.get_status()
@@ -301,25 +338,36 @@ class VsphereConnector(BaseConnector):
         datacenter, vmx_path = self._parse_vm_path(param[VSPHERE_JSON_VMX_PATH])
 
         # Get the vm from the path
+        vm = None
         try:
-            vm = self._vs_server.get_vm_by_path(vmx_path, datacenter)
+            content = self._service_instance.RetrieveContent()
+            vms = self._get_all_objs(content, [vim.VirtualMachine])
+            for v in vms:
+                if v.summary.config and v.summary.config.vmPathName == vmx_path:
+                    vm = v
+                    break
         except Exception as e:
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_VM_FROM_VMX_PATH, e)
 
+        if not vm:
+            return action_result.set_status(phantom.APP_ERROR, "Could not find VM with path: " + vmx_path)
+
         task = None
+        is_powered_on = vm.runtime.powerState == vim.VirtualMachine.PowerState.poweredOn
         # Only stop if powered on, else the API returns back an error
-        if (action == self.ACTION_ID_STOP_GUEST) and vm.is_powered_on():
-            task = vm.power_off(sync_run=False)
+        if (action == self.ACTION_ID_STOP_GUEST) and is_powered_on:
+            task = vm.PowerOffVM_Task()
         # Only start if it can be, else the API returns back an error
-        elif (action == self.ACTION_ID_START_GUEST) and (not vm.is_powered_on()):
-            task = vm.power_on(sync_run=False)
+        elif (action == self.ACTION_ID_START_GUEST) and (not is_powered_on):
+            task = vm.PowerOnVM_Task()
 
         if task:
             status_code = self._wait_for_async_task(task, action, action_result)
         else:
             # Most probably we don't have to change the state right now, treat this
             # as a success case (debatable)
-            action_result.set_status(phantom.APP_SUCCESS, VSPHERE_SUCC_CANT_EXEC, action=action, state=vm.get_status())
+            state_str = "poweredOn" if is_powered_on else "poweredOff"
+            action_result.set_status(phantom.APP_SUCCESS, VSPHERE_SUCC_CANT_EXEC, action=action, state=state_str)
 
         return action_result.get_status()
 
@@ -393,26 +441,20 @@ class VsphereConnector(BaseConnector):
             The url of the file on success, None otherwise.
         """
 
-        # get the files for this vm
-        files = vm.get_property("files", from_cache=False)
-        # self.debug_print("files data", files)
         vm_file = None
 
-        for k, v in list(files.items()):
-            # first match file type
-            if v["type"] != file_type:
-                continue
+        if hasattr(vm, "layoutEx") and vm.layoutEx:
+            for f in vm.layoutEx.file:
+                if f.type != file_type:
+                    continue
 
-            # file type matched
-            if not file_name:
-                # no need to match the name, since type matched, file is found
-                vm_file = v["name"]
-                break
+                if not file_name:
+                    vm_file = f.name
+                    break
 
-            if (file_name) and (v["name"].find(file_name) != -1):
-                # file_name is specified and it matched
-                vm_file = v["name"]
-                break
+                if file_name and (f.name.find(file_name) != -1):
+                    vm_file = f.name
+                    break
 
         if vm_file is None:
             # Not found
@@ -773,27 +815,31 @@ class VsphereConnector(BaseConnector):
         return action_result.get_status()
 
     def _get_latest_snapshot_info(self, vm):
-        snapshot_list = vm.get_snapshots()
+        if not vm.snapshot or not vm.snapshot.rootSnapshotList:
+            return None, None
 
-        last_snap_time = 0
-        last_snap = None
+        def find_latest_snapshot(snap_tree):
+            latest_snap = None
+            latest_time = None
+            for snap in snap_tree:
+                if latest_time is None or snap.createTime > latest_time:
+                    latest_time = snap.createTime
+                    latest_snap = snap
+                child_snap, child_time = find_latest_snapshot(snap.childSnapshotList)
+                if child_time and (latest_time is None or child_time > latest_time):
+                    latest_time = child_time
+                    latest_snap = child_snap
+            return latest_snap, latest_time
 
-        for snapshot in snapshot_list:
-            create_time = snapshot.get_create_time()
-            create_time_secs = mktime(create_time)
-            if last_snap_time < create_time_secs:
-                last_snap_time = create_time_secs
-                last_snap = snapshot
+        latest_snap, latest_time = find_latest_snapshot(vm.snapshot.rootSnapshotList)
 
-        if last_snap:
-            self.debug_print("last create time epoch", last_snap_time)
-            self.debug_print("last snap name", last_snap.get_name())
-            name = last_snap.get_name()
+        if latest_snap:
+            name = latest_snap.name
             id = None
-            obj_string = last_snap.properties._obj
-            m = re.search(".*snapshot-([0-9]+)", obj_string)
-            if m:
-                id = m.group(1)
+            if latest_snap.snapshot:
+                m = re.search(".*snapshot-([0-9]+)", str(latest_snap.snapshot._moId))
+                if m:
+                    id = m.group(1)
             return name, id
 
         return None, None
@@ -823,17 +869,26 @@ class VsphereConnector(BaseConnector):
         self.debug_print("vmx_path", vmx_path)
 
         # Get the vm object from the vmx path
+        vm = None
         try:
-            vm = self._vs_server.get_vm_by_path(vmx_path, datacenter)
+            content = self._service_instance.RetrieveContent()
+            vms = self._get_all_objs(content, [vim.VirtualMachine])
+            for v in vms:
+                if v.summary.config and v.summary.config.vmPathName == vmx_path:
+                    vm = v
+                    break
         except Exception as e:
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_VM_FROM_VMX_PATH, e)
+
+        if not vm:
+            return action_result.set_status(phantom.APP_ERROR, "Could not find VM with path: " + vmx_path)
 
         snap_name = VSPHERE_CONST_SNAPSHOT_NAME_PREFIX + phantom.get_random_chars()
         snap_desc = VSPHERE_CONST_SNAPSHOT_DESCRIPTION.format(container_id=self.get_container_id())
 
         self.save_progress(VSPHERE_PROG_SNAPSHOT_NAME, snap_name=snap_name)
 
-        task = vm.create_snapshot(snap_name, description=snap_desc, memory=True, sync_run=False)
+        task = vm.CreateSnapshot_Task(name=snap_name, description=snap_desc, memory=True, quiesce=False)
         status_code = self._wait_for_async_task(task, action, action_result)
 
         state_not_changed = False
@@ -882,19 +937,46 @@ class VsphereConnector(BaseConnector):
         datacenter, vmx_path = self._parse_vm_path(param[VSPHERE_JSON_VMX_PATH])
 
         # Get the vm object from the vmx path
+        vm = None
         try:
-            vm = self._vs_server.get_vm_by_path(vmx_path, datacenter)
+            content = self._service_instance.RetrieveContent()
+            vms = self._get_all_objs(content, [vim.VirtualMachine])
+            for v in vms:
+                if v.summary.config and v.summary.config.vmPathName == vmx_path:
+                    vm = v
+                    break
         except Exception as e:
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_VM_FROM_VMX_PATH, e)
+            
+        if not vm:
+            return action_result.set_status(phantom.APP_ERROR, "Could not find VM with path: " + vmx_path)
 
         # get the snapshot name
         snap_name = param.get(VSPHERE_JSON_SNAP_NAME)
 
         try:
             if snap_name is not None:
-                task = vm.revert_to_named_snapshot(snap_name, sync_run=False)
+                def find_snapshot_by_name(snap_tree, name):
+                    for snap in snap_tree:
+                        if snap.name == name:
+                            return snap.snapshot
+                        child = find_snapshot_by_name(snap.childSnapshotList, name)
+                        if child: return child
+                    return None
+                    
+                snap_obj = None
+                if vm.snapshot:
+                    snap_obj = find_snapshot_by_name(vm.snapshot.rootSnapshotList, snap_name)
+                    
+                if not snap_obj:
+                    return action_result.set_status(phantom.APP_ERROR, f"Snapshot {snap_name} not found")
+                    
+                task = snap_obj.RevertToSnapshot_Task()
             else:
-                task = vm.revert_to_snapshot(sync_run=False)
+                if not vm.snapshot or not vm.snapshot.currentSnapshot:
+                    return action_result.set_status(phantom.APP_ERROR, "No current snapshot found")
+                task = vm.RevertToCurrentSnapshot_Task()
+                
             status_code = self._wait_for_async_task(task, action, action_result)
         except Exception as e:
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_FAILED_TO_REVERT_VM, err_msg=str(e))
@@ -930,15 +1012,25 @@ class VsphereConnector(BaseConnector):
         datacenter, vmx_path = self._parse_vm_path(param[VSPHERE_JSON_VMX_PATH])
 
         # Get the vm object from the vmx path
+        vm = None
         try:
-            vm = self._vs_server.get_vm_by_path(vmx_path, datacenter)
+            content = self._service_instance.RetrieveContent()
+            vms = self._get_all_objs(content, [vim.VirtualMachine])
+            for v in vms:
+                if v.summary.config and v.summary.config.vmPathName == vmx_path:
+                    vm = v
+                    break
         except Exception as e:
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_VM_FROM_VMX_PATH, e)
+            
+        if not vm:
+            return action_result.set_status(phantom.APP_ERROR, "Could not find VM with path: " + vmx_path)
 
         task = None
+        is_suspended = vm.runtime.powerState == vim.VirtualMachine.PowerState.suspended
         # Only suspend if not suspended
-        if not vm.is_suspended():
-            task = vm.suspend(sync_run=False)
+        if not is_suspended:
+            task = vm.SuspendVM_Task()
             status_code = self._wait_for_async_task(task, action, action_result)
             if phantom.is_fail(status_code):
                 return status_code
@@ -947,8 +1039,9 @@ class VsphereConnector(BaseConnector):
                 self.save_progress(VSPHERE_PROG_SUSPENDED)
         else:
             # Set the status to havent suspended, if file is to be downloaded then it will be overwritten
-            self.save_progress(VSPHERE_PROG_SKIPPING_SUSPEND, state=vm.get_status())
-            action_result.set_status(phantom.APP_SUCCESS, VSPHERE_SUCC_CANT_EXEC, action=action, state=vm.get_status())
+            state_str = "suspended"
+            self.save_progress(VSPHERE_PROG_SKIPPING_SUSPEND, state=state_str)
+            action_result.set_status(phantom.APP_SUCCESS, VSPHERE_SUCC_CANT_EXEC, action=action, state=state_str)
 
         # either the vm was already suspended or we were able to do it now check if it needs to be downloaded
         download = param[phantom.APP_JSON_DOWNLOAD] if (phantom.APP_JSON_DOWNLOAD in param) else False
@@ -993,18 +1086,17 @@ class VsphereConnector(BaseConnector):
             result = self._test_asset_connectivity(config, param)
 
         # clean it up
-        self._vs_server.disconnect()
+        if self._service_instance:
+            Disconnect(self._service_instance)
 
         return result
 
     def handle_exception(self, exception):
         """ """
 
-        # This throws an exception sometimes stating that server is not connected
-        # even when is_connected returns True, could happen if the remote end disconnects.
         try:
-            if self._vs_server.is_connected():
-                self._vs_server.disconnect()
+            if self._service_instance:
+                Disconnect(self._service_instance)
         except:
             pass
 
