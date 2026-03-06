@@ -1,16 +1,17 @@
 # vSphere
 
 Publisher: Splunk <br>
-Connector Version: 2.0.11 <br>
+Connector Version: 2.0.12 <br>
 Product Vendor: VMware <br>
 Product Name: vSphere <br>
 Minimum Product Version: 6.3.0
 
 This app implements investigative, containment and VM management actions on VMware ESXi or vCenter server
 
-## pyvmomi
+## pysphere
 
-This app uses the pyvmomi module, which is licensed under the Apache-2.0 License.
+This app uses the pysphere module, which is licensed under the New BSD License. Copyright (c) 2012,
+Sebastian Tello All rights reserved.
 
 ### Configuration variables
 
@@ -256,7 +257,7 @@ ______________________________________________________________________
 
 Auto-generated Splunk SOAR Connector documentation.
 
-Copyright 2025 Splunk Inc.
+Copyright 2026 Splunk Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

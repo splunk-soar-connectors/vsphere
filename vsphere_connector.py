@@ -1,6 +1,6 @@
 # File: vsphere_connector.py
 #
-# Copyright (c) 2016-2025 Splunk Inc.
+# Copyright (c) 2016-2026 Splunk Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,20 +18,17 @@
 import os
 import re
 import ssl
-import time
 from collections import defaultdict
 from tempfile import mkdtemp
-from time import mktime
 
 import phantom.app as phantom
 import phantom.rules as ph_rules
 import requests
 from phantom.action_result import ActionResult
 from phantom.base_connector import BaseConnector
-import ssl
 from phantom.vault import Vault
-from pyVim.connect import SmartConnect, Disconnect
-from pyVmomi import vim, vmodl
+from pyVim.connect import Disconnect, SmartConnect
+from pyVmomi import vim
 from requests.auth import HTTPBasicAuth
 
 # THIS Connector imports
@@ -297,6 +294,7 @@ class VsphereConnector(BaseConnector):
                     displayed_once = True
 
             import time
+
             time.sleep(2)
 
         return action_result.get_status()
@@ -957,12 +955,14 @@ class VsphereConnector(BaseConnector):
 
         try:
             if snap_name is not None:
+
                 def find_snapshot_by_name(snap_tree, name):
                     for snap in snap_tree:
                         if snap.name == name:
                             return snap.snapshot
                         child = find_snapshot_by_name(snap.childSnapshotList, name)
-                        if child: return child
+                        if child:
+                            return child
                     return None
 
                 snap_obj = None
