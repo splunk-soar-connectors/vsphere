@@ -8,10 +8,9 @@ Minimum Product Version: 6.3.0
 
 This app implements investigative, containment and VM management actions on VMware ESXi or vCenter server
 
-## pysphere
+## pyvmomi
 
-This app uses the pysphere module, which is licensed under the New BSD License. Copyright (c) 2012,
-Sebastian Tello All rights reserved.
+This app uses the pyvmomi module, which is licensed under the Apache-2.0 License.
 
 ### Configuration variables
 
