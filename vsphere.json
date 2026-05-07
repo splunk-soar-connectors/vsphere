@@ -5,7 +5,7 @@
     "publisher": "Splunk",
     "type": "virtualization",
     "main_module": "vsphere_connector.py",
-    "app_version": "2.0.11",
+    "app_version": "2.0.12",
     "utctime_updated": "2025-11-10T19:04:25.414004Z",
     "package_name": "phantom_vsphere",
     "product_vendor": "VMware",
@@ -19,7 +19,7 @@
     ],
     "logo": "logo_vsphere.svg",
     "logo_dark": "logo_vsphere_dark.svg",
-    "license": "Copyright (c) 2016-2025 Splunk Inc.",
+    "license": "Copyright (c) 2016-2026 Splunk Inc.",
     "configuration": {
         "server": {
             "data_type": "string",
@@ -640,16 +640,16 @@
     "pip39_dependencies": {
         "wheel": [
             {
-                "module": "pysphere",
-                "input_file": "wheels/py3/pysphere-0.1.8-py3-none-any.whl"
+                "module": "pyvmomi",
+                "input_file": "wheels/py3/pyvmomi-9.0.0.0-py3-none-any.whl"
             }
         ]
     },
     "pip313_dependencies": {
         "wheel": [
             {
-                "module": "pysphere",
-                "input_file": "wheels/py3/pysphere-0.1.8-py3-none-any.whl"
+                "module": "pyvmomi",
+                "input_file": "wheels/py3/pyvmomi-9.0.0.0-py3-none-any.whl"
             }
         ]
     }
