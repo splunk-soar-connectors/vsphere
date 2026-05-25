@@ -12,7 +12,7 @@
     "product_name": "vSphere",
     "product_version_regex": ".*",
     "min_phantom_version": "6.3.0",
-    "python_version": "3.9, 3.13",
+    "python_version": "3.13",
     "fips_compliant": true,
     "latest_tested_versions": [
         "VMware ESXi v6.5.0"
@@ -633,19 +633,19 @@
             "versions": "EQ(*)"
         }
     ],
-    "pip39_dependencies": {
-        "wheel": [
-            {
-                "module": "pyvmomi",
-                "input_file": "wheels/py3/pyvmomi-9.0.0.0-py3-none-any.whl"
-            }
-        ]
-    },
     "pip313_dependencies": {
         "wheel": [
             {
                 "module": "pyvmomi",
-                "input_file": "wheels/py3/pyvmomi-9.0.0.0-py3-none-any.whl"
+                "input_file": "wheels/py3/pyvmomi-9.1.0.0-py3-none-any.whl"
+            }
+        ]
+    },
+    "pip39_dependencies": {
+        "wheel": [
+            {
+                "module": "pyvmomi",
+                "input_file": "wheels/py3/pyvmomi-9.1.0.0-py3-none-any.whl"
             }
         ]
     }
