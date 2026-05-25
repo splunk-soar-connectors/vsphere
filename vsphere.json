@@ -640,13 +640,5 @@
                 "input_file": "wheels/py3/pyvmomi-9.1.0.0-py3-none-any.whl"
             }
         ]
-    },
-    "pip39_dependencies": {
-        "wheel": [
-            {
-                "module": "pyvmomi",
-                "input_file": "wheels/py3/pyvmomi-9.1.0.0-py3-none-any.whl"
-            }
-        ]
     }
 }
