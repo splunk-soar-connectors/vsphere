@@ -11,11 +11,11 @@
     "product_vendor": "VMware",
     "product_name": "vSphere",
     "product_version_regex": ".*",
-    "min_phantom_version": "6.3.0",
+    "min_phantom_version": "7.0.0",
     "python_version": "3.13",
     "fips_compliant": true,
     "latest_tested_versions": [
-        "VMware ESXi v6.5.0"
+        "VMware ESXi v8.0.3"
     ],
     "logo": "logo_vsphere.svg",
     "logo_dark": "logo_vsphere_dark.svg",
