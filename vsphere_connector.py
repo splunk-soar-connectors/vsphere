@@ -211,6 +211,14 @@ class VsphereConnector(BaseConnector):
 
         return datacenter, vmx_path
 
+    def _format_power_state(self, power_state):
+        mapping = {
+            vim.VirtualMachinePowerState.poweredOn: "POWERED ON",
+            vim.VirtualMachinePowerState.poweredOff: "POWERED OFF",
+            vim.VirtualMachinePowerState.suspended: "SUSPENDED",
+        }
+        return mapping.get(power_state, str(power_state))
+
     def _get_system_info(self, config, param):
         status_code = self._connect_to_server(config)
         if phantom.is_fail(status_code):
@@ -337,7 +345,7 @@ class VsphereConnector(BaseConnector):
         if task:
             status_code = self._wait_for_task(task, action, action_result)
         else:
-            action_result.set_status(phantom.APP_SUCCESS, VSPHERE_SUCC_CANT_EXEC, action=action, state=str(power_state))
+            action_result.set_status(phantom.APP_SUCCESS, VSPHERE_SUCC_CANT_EXEC, action=action, state=self._format_power_state(power_state))
 
         return action_result.get_status()
 
@@ -916,7 +924,7 @@ class VsphereConnector(BaseConnector):
             action_result.set_status(phantom.APP_SUCCESS, phantom.APP_SUCC_CMD_EXEC)
             self.save_progress(VSPHERE_PROG_SUSPENDED)
         else:
-            power_state_str = str(power_state)
+            power_state_str = self._format_power_state(power_state)
             self.save_progress(VSPHERE_PROG_SKIPPING_SUSPEND, state=power_state_str)
             action_result.set_status(phantom.APP_SUCCESS, VSPHERE_SUCC_CANT_EXEC, action=action, state=power_state_str)
 
