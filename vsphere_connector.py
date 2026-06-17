@@ -319,6 +319,7 @@ class VsphereConnector(BaseConnector):
         self.save_progress(f"In action handler for: {self.get_action_identifier()}")
         action_result = self.add_action_result(ActionResult(dict(param)))
 
+        datacenter, _ = self._parse_vm_path(param[VSPHERE_JSON_VMX_PATH])
         vm = self._find_vm_by_path(param[VSPHERE_JSON_VMX_PATH])
         if vm is None:
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_VM_FROM_VMX_PATH)
@@ -802,6 +803,7 @@ class VsphereConnector(BaseConnector):
 
         action_result = self.add_action_result(ActionResult(dict(param)))
 
+        datacenter, _ = self._parse_vm_path(param[VSPHERE_JSON_VMX_PATH])
         vm = self._find_vm_by_path(param[VSPHERE_JSON_VMX_PATH])
         if vm is None:
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_VM_FROM_VMX_PATH)
@@ -835,7 +837,7 @@ class VsphereConnector(BaseConnector):
                     return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_FAILED_TO_GET_SNAPSHOT_INFO)
                 self.debug_print(f"Latest snapshot: {snap_name} with id {id}")
 
-            status_code = self._download_snapshot_file(snap_name, vmx_path, config, moref, action_result, vmx_path, id)
+            status_code = self._download_snapshot_file(snap_name, vmx_path, config, moref, action_result, datacenter, id)
 
         return action_result.get_status()
 
@@ -896,6 +898,7 @@ class VsphereConnector(BaseConnector):
 
         action_result = self.add_action_result(ActionResult(dict(param)))
 
+        datacenter, _ = self._parse_vm_path(param[VSPHERE_JSON_VMX_PATH])
         vm = self._find_vm_by_path(param[VSPHERE_JSON_VMX_PATH])
         if vm is None:
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_VM_FROM_VMX_PATH)
@@ -919,7 +922,7 @@ class VsphereConnector(BaseConnector):
 
         download = param[phantom.APP_JSON_DOWNLOAD] if phantom.APP_JSON_DOWNLOAD in param else False
         if download:
-            status_code = self._download_suspend_file(vmx_path, config, action_result, moref, container_id, vmx_path)
+            status_code = self._download_suspend_file(vmx_path, config, action_result, moref, container_id, datacenter)
 
         return action_result.get_status()
 
