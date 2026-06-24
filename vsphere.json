@@ -13,7 +13,7 @@
     "product_version_regex": ".*",
     "min_phantom_version": "7.0.0",
     "python_version": "3.9, 3.13",
-    "fips_compliant": true,
+    "fips_compliant": false,
     "latest_tested_versions": [
         "VMware ESXi v8.0.3"
     ],

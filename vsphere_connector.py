@@ -83,21 +83,17 @@ class VsphereConnector(BaseConnector):
         username = config[phantom.APP_JSON_USERNAME]
         password = config[phantom.APP_JSON_PASSWORD]
 
-        # support optional host:port syntax
-        if ":" in server:
-            host, port_str = server.rsplit(":", 1)
-            port = int(port_str)
-        else:
-            host, port = server, 443
-
         self.save_progress(phantom.APP_PROG_CONNECTING_TO_ELLIPSES, server)
 
         try:
+            host, port = self._parse_server_host_port(server)
             if self._verify is False:
                 context = ssl._create_unverified_context()
             else:
                 context = ssl.create_default_context()
             self._vs_server = SmartConnect(host=host, user=username, pwd=password, sslContext=context, port=port)
+        except ValueError:
+            return self.set_status_save_progress(phantom.APP_ERROR, VSPHERE_ERR_SERVER_FORMAT, server=server)
         except Exception as e:
             return self.set_status_save_progress(phantom.APP_ERROR, VSPHERE_ERR_SERVER_CONNECT, e, server_ip=server)
 
@@ -119,6 +115,7 @@ class VsphereConnector(BaseConnector):
 
         content = self._vs_server.RetrieveContent()
         collector = content.propertyCollector
+        container_view = content.viewManager.CreateContainerView(content.rootFolder, [vim.VirtualMachine], True)
 
         traversal = vmodl.query.PropertyCollector.TraversalSpec(
             name="traverseEntities",
@@ -127,7 +124,7 @@ class VsphereConnector(BaseConnector):
             skip=False,
         )
         obj_spec = vmodl.query.PropertyCollector.ObjectSpec(
-            obj=content.viewManager.CreateContainerView(content.rootFolder, [vim.VirtualMachine], True),
+            obj=container_view,
             skip=True,
             selectSet=[traversal],
         )
@@ -141,26 +138,42 @@ class VsphereConnector(BaseConnector):
         )
         options = vmodl.query.PropertyCollector.RetrieveOptions(maxObjects=100)
 
-        result = collector.RetrievePropertiesEx([filter_spec], options)
-        vms = []
-        while result:
-            for obj in result.objects:
-                props = {p.name: p.val for p in obj.propSet} if obj.propSet else {}
-                props["_moref"] = obj.obj
-                vms.append(props)
-            if result.token:
-                result = collector.ContinueRetrievePropertiesEx(result.token)
-            else:
-                break
-        return vms
+        try:
+            result = collector.RetrievePropertiesEx([filter_spec], options)
+            vms = []
+            while result:
+                for obj in result.objects:
+                    props = {p.name: p.val for p in obj.propSet} if obj.propSet else {}
+                    props["_moref"] = obj.obj
+                    props["_datacenter"] = self._get_vm_datacenter_name(obj.obj)
+                    vms.append(props)
+                if result.token:
+                    result = collector.ContinueRetrievePropertiesEx(result.token)
+                else:
+                    break
+            return vms
+        finally:
+            container_view.Destroy()
 
     def _find_vm_by_path(self, full_vmx_path):
-        _, vmx_path = self._parse_vm_path(full_vmx_path)
+        datacenter, vmx_path = self._parse_vm_path(full_vmx_path)
+        match_datacenter = full_vmx_path != vmx_path
         props = [*self._VM_PROPERTIES, "snapshot"]
         for vm in self._collect_vm_properties(props):
-            if vm.get("summary.config.vmPathName") == vmx_path:
-                return vm
+            if vm.get("summary.config.vmPathName") != vmx_path:
+                continue
+            if match_datacenter and vm.get("_datacenter") != datacenter:
+                continue
+            return vm
         return None
+
+    def _get_vm_datacenter_name(self, vm_moref):
+        parent = vm_moref.parent
+        while parent is not None:
+            if isinstance(parent, vim.Datacenter):
+                return parent.name
+            parent = getattr(parent, "parent", None)
+        return VSPHERE_CONST_DEFAULT_DATACENTER
 
     def _wait_for_task(self, task, action, action_result):
         task_name = action.replace("_", " ")
@@ -211,6 +224,11 @@ class VsphereConnector(BaseConnector):
 
         return datacenter, vmx_path
 
+    def _format_vmx_path(self, datacenter, vmx_path):
+        if datacenter and vmx_path.startswith("["):
+            return f"[{datacenter}]{vmx_path}"
+        return vmx_path
+
     def _format_power_state(self, power_state):
         mapping = {
             vim.VirtualMachinePowerState.poweredOn: "POWERED ON",
@@ -218,6 +236,30 @@ class VsphereConnector(BaseConnector):
             vim.VirtualMachinePowerState.suspended: "SUSPENDED",
         }
         return mapping.get(power_state, str(power_state))
+
+    def _parse_server_host_port(self, server):
+        if not server:
+            raise ValueError("empty server")
+
+        if "://" in server:
+            raise ValueError("server must not include a URL scheme")
+
+        bracketed_ipv6 = re.match(r"^\[(?P<host>.+)\](?::(?P<port>\d+))?$", server)
+        if bracketed_ipv6:
+            host = bracketed_ipv6.group("host")
+            port = bracketed_ipv6.group("port")
+            return host, int(port) if port else 443
+
+        if server.count(":") == 1:
+            host, port = server.rsplit(":", 1)
+            if not host or not port.isdigit():
+                raise ValueError("invalid host:port")
+            return host, int(port)
+
+        if ":" in server:
+            return server, 443
+
+        return server, 443
 
     def _get_system_info(self, config, param):
         status_code = self._connect_to_server(config)
@@ -240,7 +282,7 @@ class VsphereConnector(BaseConnector):
                 continue
 
             curr_data = action_result.add_data({})
-            curr_data[VSPHERE_JSON_VMX_PATH] = vm.get("summary.config.vmPathName")
+            curr_data[VSPHERE_JSON_VMX_PATH] = self._format_vmx_path(vm.get("_datacenter"), vm.get("summary.config.vmPathName"))
             curr_data[phantom.APP_JSON_IP] = ip
             curr_data[VSPHERE_JSON_GUEST_NAME] = vm.get("name")
             curr_data[VSPHERE_JSON_GUEST_HOST_NAME] = hostname
@@ -286,7 +328,7 @@ class VsphereConnector(BaseConnector):
                 continue
 
             curr_data = action_result.add_data({})
-            curr_data[VSPHERE_JSON_VMX_PATH] = vm.get("summary.config.vmPathName")
+            curr_data[VSPHERE_JSON_VMX_PATH] = self._format_vmx_path(vm.get("_datacenter"), vm.get("summary.config.vmPathName"))
             curr_data[phantom.APP_JSON_IP] = vm.get("guest.ipAddress")
             curr_data[VSPHERE_JSON_GUEST_NAME] = vm.get("name")
             curr_data[VSPHERE_JSON_GUEST_HOST_NAME] = vm.get("guest.hostName")
@@ -327,7 +369,6 @@ class VsphereConnector(BaseConnector):
         self.save_progress(f"In action handler for: {self.get_action_identifier()}")
         action_result = self.add_action_result(ActionResult(dict(param)))
 
-        datacenter, _ = self._parse_vm_path(param[VSPHERE_JSON_VMX_PATH])
         vm = self._find_vm_by_path(param[VSPHERE_JSON_VMX_PATH])
         if vm is None:
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_VM_FROM_VMX_PATH)
@@ -811,13 +852,13 @@ class VsphereConnector(BaseConnector):
 
         action_result = self.add_action_result(ActionResult(dict(param)))
 
-        datacenter, _ = self._parse_vm_path(param[VSPHERE_JSON_VMX_PATH])
         vm = self._find_vm_by_path(param[VSPHERE_JSON_VMX_PATH])
         if vm is None:
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_VM_FROM_VMX_PATH)
 
+        datacenter = vm.get("_datacenter")
         moref = vm["_moref"]
-        vmx_path = vm.get("summary.config.vmPathName")
+        vmx_path = self._format_vmx_path(datacenter, vm.get("summary.config.vmPathName"))
         snap_name = VSPHERE_CONST_SNAPSHOT_NAME_PREFIX + phantom.get_random_chars()
         snap_desc = VSPHERE_CONST_SNAPSHOT_DESCRIPTION.format(container_id=self.get_container_id())
 
@@ -906,13 +947,13 @@ class VsphereConnector(BaseConnector):
 
         action_result = self.add_action_result(ActionResult(dict(param)))
 
-        datacenter, _ = self._parse_vm_path(param[VSPHERE_JSON_VMX_PATH])
         vm = self._find_vm_by_path(param[VSPHERE_JSON_VMX_PATH])
         if vm is None:
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_VM_FROM_VMX_PATH)
 
+        datacenter = vm.get("_datacenter")
         moref = vm["_moref"]
-        vmx_path = vm.get("summary.config.vmPathName")
+        vmx_path = self._format_vmx_path(datacenter, vm.get("summary.config.vmPathName"))
         power_state = vm.get("runtime.powerState")
         is_suspended = power_state == vim.VirtualMachinePowerState.suspended
 
