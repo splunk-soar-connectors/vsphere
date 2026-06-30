@@ -155,10 +155,12 @@ class VsphereConnector(BaseConnector):
         finally:
             container_view.Destroy()
 
-    def _find_vm_by_path(self, full_vmx_path):
+    def _find_vm_by_path(self, full_vmx_path, include_snapshot=False):
         datacenter, vmx_path = self._parse_vm_path(full_vmx_path)
         match_datacenter = full_vmx_path != vmx_path
-        props = [*self._VM_PROPERTIES, "snapshot"]
+        props = list(self._VM_PROPERTIES)
+        if include_snapshot:
+            props.append("snapshot")
         for vm in self._collect_vm_properties(props):
             if vm.get("summary.config.vmPathName") != vmx_path:
                 continue
@@ -852,7 +854,7 @@ class VsphereConnector(BaseConnector):
 
         action_result = self.add_action_result(ActionResult(dict(param)))
 
-        vm = self._find_vm_by_path(param[VSPHERE_JSON_VMX_PATH])
+        vm = self._find_vm_by_path(param[VSPHERE_JSON_VMX_PATH], include_snapshot=True)
         if vm is None:
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_VM_FROM_VMX_PATH)
 
@@ -900,7 +902,7 @@ class VsphereConnector(BaseConnector):
         self.save_progress(f"In action handler for: {self.get_action_identifier()}")
         action_result = self.add_action_result(ActionResult(dict(param)))
 
-        vm = self._find_vm_by_path(param[VSPHERE_JSON_VMX_PATH])
+        vm = self._find_vm_by_path(param[VSPHERE_JSON_VMX_PATH], include_snapshot=True)
         if vm is None:
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_VM_FROM_VMX_PATH)
 
