@@ -1,6 +1,6 @@
 # File: vsphere_consts.py
 #
-# Copyright (c) 2016-2025 Splunk Inc.
+# Copyright (c) 2016-2026 Splunk Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ VSPHERE_JSON_IP_HOSTNAME = "ip_hostname"
 
 # Status messages for vsphere app
 VSPHERE_ERR_SERVER_CONNECT = "Connection to {server_ip} failed"
+VSPHERE_ERR_SERVER_FORMAT = "Server value is invalid: {server}"
 VSPHERE_SUCC_CANT_EXEC = "Cannot execute {action} since current state of vm is {state}"
 VSPHERE_ERR_CANNOT_FIND_SNAPSHOT_LIST_FILE = "Cannot find snapshot list file"
 VSPHERE_ERR_SNAPSHOT_PATH = "Cannot find path for snapshot '{}'"
