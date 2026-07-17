@@ -195,6 +195,7 @@ class VsphereConnector(BaseConnector):
     def _wait_for_task(self, task, action, action_result):
         task_name = action.replace("_", " ")
         displayed_once = False
+        deadline = time.monotonic() + VSPHERE_TASK_TIMEOUT_SECONDS
 
         while True:
             state = task.info.state
@@ -204,6 +205,15 @@ class VsphereConnector(BaseConnector):
                 break
             elif state == vim.TaskInfo.State.success:
                 action_result.set_status(phantom.APP_SUCCESS, phantom.APP_SUCC_CMD_EXEC)
+                break
+            elif time.monotonic() >= deadline:
+                action_result.set_status(
+                    phantom.APP_ERROR,
+                    VSPHERE_ERR_TASK_TIMEOUT,
+                    task_name=task_name,
+                    timeout=VSPHERE_TASK_TIMEOUT_SECONDS,
+                    state=state,
+                )
                 break
             elif state == vim.TaskInfo.State.queued:
                 self.send_progress(VSPHERE_PROG_TASK_QUEUED)

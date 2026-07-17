@@ -2,3 +2,4 @@
 
 * Default TLS certificate verification to enabled when the asset setting is absent. [PSAAS-30843]
 * Bound vSphere property pagination by page count, object count, and elapsed time. [PSAAS-31924]
+* Stop waiting for asynchronous vSphere tasks after ten minutes. [PSAAS-32015]
