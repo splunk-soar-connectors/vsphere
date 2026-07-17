@@ -52,12 +52,12 @@ class VsphereConnector(BaseConnector):
         super().__init__()
 
         self._vs_server = None
-        self._verify = False
+        self._verify = True
 
     def initialize(self):
         config = self.get_config()
 
-        self._verify = config.get("verify_server_cert", False)
+        self._verify = config.get("verify_server_cert", True)
 
         # setup the auth
         self._auth = HTTPBasicAuth(config[phantom.APP_JSON_USERNAME], config[phantom.APP_JSON_PASSWORD])
@@ -141,8 +141,23 @@ class VsphereConnector(BaseConnector):
         try:
             result = collector.RetrievePropertiesEx([filter_spec], options)
             vms = []
+            page_count = 0
+            object_count = 0
+            deadline = time.monotonic() + VSPHERE_PROPERTY_RETRIEVAL_TIMEOUT_SECONDS
             while result:
-                for obj in result.objects:
+                if time.monotonic() >= deadline:
+                    raise RuntimeError(VSPHERE_ERR_PROPERTY_RETRIEVAL_LIMIT.format(limit_name="time"))
+
+                page_count += 1
+                if page_count > VSPHERE_MAX_PROPERTY_PAGES:
+                    raise RuntimeError(VSPHERE_ERR_PROPERTY_RETRIEVAL_LIMIT.format(limit_name="page"))
+
+                objects = result.objects or []
+                object_count += len(objects)
+                if object_count > VSPHERE_MAX_PROPERTY_OBJECTS:
+                    raise RuntimeError(VSPHERE_ERR_PROPERTY_RETRIEVAL_LIMIT.format(limit_name="object"))
+
+                for obj in objects:
                     props = {p.name: p.val for p in obj.propSet} if obj.propSet else {}
                     props["_moref"] = obj.obj
                     props["_datacenter"] = self._get_vm_datacenter_name(obj.obj)
@@ -180,6 +195,7 @@ class VsphereConnector(BaseConnector):
     def _wait_for_task(self, task, action, action_result):
         task_name = action.replace("_", " ")
         displayed_once = False
+        deadline = time.monotonic() + VSPHERE_TASK_TIMEOUT_SECONDS
 
         while True:
             state = task.info.state
@@ -189,6 +205,15 @@ class VsphereConnector(BaseConnector):
                 break
             elif state == vim.TaskInfo.State.success:
                 action_result.set_status(phantom.APP_SUCCESS, phantom.APP_SUCC_CMD_EXEC)
+                break
+            elif time.monotonic() >= deadline:
+                action_result.set_status(
+                    phantom.APP_ERROR,
+                    VSPHERE_ERR_TASK_TIMEOUT,
+                    task_name=task_name,
+                    timeout=VSPHERE_TASK_TIMEOUT_SECONDS,
+                    state=state,
+                )
                 break
             elif state == vim.TaskInfo.State.queued:
                 self.send_progress(VSPHERE_PROG_TASK_QUEUED)
