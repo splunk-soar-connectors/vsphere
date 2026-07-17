@@ -141,8 +141,23 @@ class VsphereConnector(BaseConnector):
         try:
             result = collector.RetrievePropertiesEx([filter_spec], options)
             vms = []
+            page_count = 0
+            object_count = 0
+            deadline = time.monotonic() + VSPHERE_PROPERTY_RETRIEVAL_TIMEOUT_SECONDS
             while result:
-                for obj in result.objects:
+                if time.monotonic() >= deadline:
+                    raise RuntimeError(VSPHERE_ERR_PROPERTY_RETRIEVAL_LIMIT.format(limit_name="time"))
+
+                page_count += 1
+                if page_count > VSPHERE_MAX_PROPERTY_PAGES:
+                    raise RuntimeError(VSPHERE_ERR_PROPERTY_RETRIEVAL_LIMIT.format(limit_name="page"))
+
+                objects = result.objects or []
+                object_count += len(objects)
+                if object_count > VSPHERE_MAX_PROPERTY_OBJECTS:
+                    raise RuntimeError(VSPHERE_ERR_PROPERTY_RETRIEVAL_LIMIT.format(limit_name="object"))
+
+                for obj in objects:
                     props = {p.name: p.val for p in obj.propSet} if obj.propSet else {}
                     props["_moref"] = obj.obj
                     props["_datacenter"] = self._get_vm_datacenter_name(obj.obj)
