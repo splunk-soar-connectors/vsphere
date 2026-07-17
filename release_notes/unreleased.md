@@ -1,3 +1,3 @@
 **Unreleased**
 
-* Chore: refresh connector development tooling for ESPM-5228.
+* Default TLS certificate verification to enabled when the asset setting is absent. [PSAAS-30843]

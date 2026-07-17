@@ -52,12 +52,12 @@ class VsphereConnector(BaseConnector):
         super().__init__()
 
         self._vs_server = None
-        self._verify = False
+        self._verify = True
 
     def initialize(self):
         config = self.get_config()
 
-        self._verify = config.get("verify_server_cert", False)
+        self._verify = config.get("verify_server_cert", True)
 
         # setup the auth
         self._auth = HTTPBasicAuth(config[phantom.APP_JSON_USERNAME], config[phantom.APP_JSON_PASSWORD])
