@@ -1,3 +1,3 @@
 **Unreleased**
 
-* Chore: Update connector checks.
+* Fixed vSphere downloads to reject text responses and size mismatches before adding them to the vault.
