@@ -549,13 +549,14 @@ class VsphereConnector(BaseConnector):
 
         return result.get_status()
 
-    def _download_file(self, url_to_download, action_result, local_file_path):
+    def _download_file(self, url_to_download, action_result, local_file_path, expect_binary=False):
         """Function that downloads the file from a url
 
         Args:
             url_to_download: the url of the file to download
             action_result: The ActionResult object to hold the status
             local_file_path: The local file path that was created.
+            expect_binary: Whether the requested datastore file is a binary VM capture.
 
         Return:
             A status code of the type phantom.APP_[SUCC|ERR]_XXX.
@@ -588,14 +589,24 @@ class VsphereConnector(BaseConnector):
             return (action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_SERVER_RETURNED_STATUS_CODE, code=r.status_code), content_size)
 
         # get the content length
-        content_size = r.headers["content-length"]
+        content_size = r.headers.get("content-length")
 
         if not content_size:
             return (action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_CANNOT_GET_CONTENT_LENGTH), content_size)
 
-        self.save_progress(phantom.APP_PROG_FILE_SIZE, value=content_size, type="bytes")
+        try:
+            bytes_to_download = int(content_size)
+        except (TypeError, ValueError):
+            return (action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_INVALID_CONTENT_LENGTH), content_size)
 
-        bytes_to_download = int(content_size)
+        if bytes_to_download <= 0:
+            return (action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_EMPTY_FILE), content_size)
+
+        content_type = r.headers.get("content-type", "").lower()
+        if expect_binary and content_type.startswith("text/"):
+            return (action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_TEXT_CONTENT_TYPE), content_size)
+
+        self.save_progress(phantom.APP_PROG_FILE_SIZE, value=content_size, type="bytes")
 
         # init to download the whole file in a single read
         block_size = bytes_to_download
@@ -618,7 +629,10 @@ class VsphereConnector(BaseConnector):
         except Exception as e:
             return (action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_SERVER_CONNECTION, e), content_size)
 
-        return (action_result.set_status(phantom.APP_SUCCESS, phantom.APP_SUCC_FILE_DOWNLOAD), content_size)
+        if bytes_downloaded != bytes_to_download:
+            return (action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_FILE_SIZE_MISMATCH), bytes_downloaded)
+
+        return (action_result.set_status(phantom.APP_SUCCESS, phantom.APP_SUCC_FILE_DOWNLOAD), bytes_downloaded)
 
     def _parse_snap_list_file(self, local_file_path, snap_name, id):
         """Function that parses the snapshot list file from a local location and return the file name
@@ -757,7 +771,7 @@ class VsphereConnector(BaseConnector):
         local_file_path = f"{temp_dir}/{phantom.get_valid_file_name(phantom.get_valid_file_name(snap_name))}-{phantom.get_file_name_from_url(snap_file_url[VSPHERE_CONST_URL])}"
 
         self.save_progress(VSPHERE_PROG_SNAPSHOT_DOWNLOADING, snap_name=snap_name)
-        status_code, content_size = self._download_file(snap_file_url, action_result, local_file_path)
+        status_code, content_size = self._download_file(snap_file_url, action_result, local_file_path, expect_binary=True)
         if phantom.is_fail(status_code):
             return action_result.get_status()
 
@@ -818,7 +832,7 @@ class VsphereConnector(BaseConnector):
 
         # download it
         local_file_path = f"{temp_dir}/{phantom.get_file_name_from_url(vm_suspend_url[VSPHERE_CONST_URL])}"
-        status_code, content_size = self._download_file(vm_suspend_url, action_result, local_file_path)
+        status_code, content_size = self._download_file(vm_suspend_url, action_result, local_file_path, expect_binary=True)
 
         if phantom.is_fail(status_code):
             return action_result.get_status()
