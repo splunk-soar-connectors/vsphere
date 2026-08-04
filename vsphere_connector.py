@@ -15,6 +15,7 @@
 #
 #
 # Phantom imports
+import ipaddress
 import os
 import re
 import shutil
@@ -117,6 +118,38 @@ class VsphereConnector(BaseConnector):
         "config.guestFullName",
         "runtime.powerState",
     ]
+
+    @staticmethod
+    def _normalize_endpoint(value):
+        if value is None:
+            return None
+
+        value = str(value).strip()
+        if not value:
+            return None
+
+        try:
+            return ipaddress.ip_address(value)
+        except ValueError:
+            return value.casefold()
+
+    @classmethod
+    def _matches_endpoint(cls, queried_endpoint, vm):
+        queried_endpoint = cls._normalize_endpoint(queried_endpoint)
+        if queried_endpoint is None:
+            return False
+
+        candidates = {
+            cls._normalize_endpoint(vm.get("guest.ipAddress")),
+            cls._normalize_endpoint(vm.get("guest.hostName")),
+        }
+        for nic in vm.get("guest.net") or []:
+            candidates.update(cls._normalize_endpoint(address) for address in (getattr(nic, "ipAddress", None) or []))
+            ip_config = getattr(nic, "ipConfig", None)
+            candidates.update(cls._normalize_endpoint(address.ipAddress) for address in (getattr(ip_config, "ipAddress", None) or []))
+
+        candidates.discard(None)
+        return queried_endpoint in candidates
 
     def _collect_vm_properties(self, properties=None):
         """Paginated bulk property fetch. Returns list of dicts keyed by property path."""
@@ -307,7 +340,7 @@ class VsphereConnector(BaseConnector):
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         ip_hostname = param[VSPHERE_JSON_IP_HOSTNAME]
-        all_vms = self._collect_vm_properties()
+        all_vms = self._collect_vm_properties([*self._VM_PROPERTIES, "guest.net"])
         total_vms = len(all_vms)
         matched = False
 
@@ -315,7 +348,7 @@ class VsphereConnector(BaseConnector):
             ip = vm.get("guest.ipAddress")
             hostname = vm.get("guest.hostName")
 
-            if (ip_hostname != ip) and (ip_hostname != hostname):
+            if not self._matches_endpoint(ip_hostname, vm):
                 continue
 
             curr_data = action_result.add_data({})
