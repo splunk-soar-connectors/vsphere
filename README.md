@@ -20,6 +20,7 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 -------- | -------- | ---- | -----------
 **server** | required | string | Server IP/Hostname |
 **verify_server_cert** | optional | boolean | Verify server certificate |
+**max_download_size_mb** | optional | numeric | Maximum datastore file download size in MiB |
 **username** | required | string | Administrator username |
 **password** | required | password | Administrator password |
 

@@ -24,6 +24,7 @@ VSPHERE_JSON_DISPLAY_NAME = "display_name"
 VSPHERE_JSON_GUEST_HOST_NAME = "vm_hostname"
 VSPHERE_JSON_SNAP_NAME = "snapshot"
 VSPHERE_JSON_IP_HOSTNAME = "ip_hostname"
+VSPHERE_JSON_MAX_DOWNLOAD_SIZE_MB = "max_download_size_mb"
 
 # Status messages for vsphere app
 VSPHERE_ERR_SERVER_CONNECT = "Connection to {server_ip} failed"
@@ -36,6 +37,9 @@ VSPHERE_ERR_INVALID_CONTENT_LENGTH = "Server returned an invalid content length"
 VSPHERE_ERR_EMPTY_FILE = "Server returned an empty file"
 VSPHERE_ERR_TEXT_CONTENT_TYPE = "Server returned text content instead of a datastore file"
 VSPHERE_ERR_FILE_SIZE_MISMATCH = "Downloaded file size did not match the server response"
+VSPHERE_ERR_TRANSFER_ENCODED_DOWNLOAD = "Server returned an unsupported transfer-encoded datastore file"
+VSPHERE_ERR_DOWNLOAD_TOO_LARGE = "Declared file size {declared} bytes exceeds the maximum download size {maximum} bytes"
+VSPHERE_ERR_INVALID_MAX_DOWNLOAD_SIZE = "Maximum download size must be a positive number of MiB"
 VSPHERE_ERR_CANNOT_FIND_SUSPEND_FILE = "Unable to locate suspend file"
 VSPHERE_ERR_SNAPSHOT_URL = "Could not create url to file for snapshot '{}'"
 VSPHERE_ERR_VM_FROM_VMX_PATH = "Could not get vm object from the vmx path"
@@ -78,6 +82,7 @@ VSPHERE_CONST_DEFAULT_DATACENTER = "ha-datacenter"
 VSPHERE_CONST_URL = "url"
 VSPHERE_CONST_DATACENTER = "dcPath"
 VSPHERE_CONST_DATASTORE = "dsName"
+VSPHERE_DEFAULT_MAX_DOWNLOAD_SIZE_MB = 300
 
 # This text is compared with an error that we get from the vsphere server, don't change
 # If you need to change this, then change this value to a list and add the newer string to it.

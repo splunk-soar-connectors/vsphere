@@ -34,15 +34,22 @@
             "required": false,
             "default": true
         },
+        "max_download_size_mb": {
+            "data_type": "numeric",
+            "order": 2,
+            "description": "Maximum datastore file download size in MiB",
+            "required": false,
+            "default": 300
+        },
         "username": {
             "data_type": "string",
-            "order": 2,
+            "order": 3,
             "description": "Administrator username",
             "required": true
         },
         "password": {
             "data_type": "password",
-            "order": 3,
+            "order": 4,
             "description": "Administrator password",
             "required": true
         }

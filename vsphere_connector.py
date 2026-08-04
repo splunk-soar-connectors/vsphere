@@ -17,6 +17,7 @@
 # Phantom imports
 import os
 import re
+import shutil
 import ssl
 import time
 from collections import defaultdict
@@ -53,11 +54,20 @@ class VsphereConnector(BaseConnector):
 
         self._vs_server = None
         self._verify = True
+        self._max_download_size_bytes = VSPHERE_DEFAULT_MAX_DOWNLOAD_SIZE_MB * 1024 * 1024
 
     def initialize(self):
         config = self.get_config()
 
         self._verify = config.get("verify_server_cert", True)
+
+        try:
+            max_download_size_mb = int(config.get(VSPHERE_JSON_MAX_DOWNLOAD_SIZE_MB, VSPHERE_DEFAULT_MAX_DOWNLOAD_SIZE_MB))
+            if max_download_size_mb <= 0:
+                raise ValueError
+        except (TypeError, ValueError):
+            return self.set_status(phantom.APP_ERROR, VSPHERE_ERR_INVALID_MAX_DOWNLOAD_SIZE)
+        self._max_download_size_bytes = max_download_size_mb * 1024 * 1024
 
         # setup the auth
         self._auth = HTTPBasicAuth(config[phantom.APP_JSON_USERNAME], config[phantom.APP_JSON_PASSWORD])
@@ -602,6 +612,20 @@ class VsphereConnector(BaseConnector):
         if bytes_to_download <= 0:
             return (action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_EMPTY_FILE), content_size)
 
+        if r.headers.get("transfer-encoding"):
+            return (action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_TRANSFER_ENCODED_DOWNLOAD), content_size)
+
+        if bytes_to_download > self._max_download_size_bytes:
+            return (
+                action_result.set_status(
+                    phantom.APP_ERROR,
+                    VSPHERE_ERR_DOWNLOAD_TOO_LARGE,
+                    declared=bytes_to_download,
+                    maximum=self._max_download_size_bytes,
+                ),
+                content_size,
+            )
+
         content_type = r.headers.get("content-type", "").lower()
         if expect_binary and content_type.startswith("text/"):
             return (action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_TEXT_CONTENT_TYPE), content_size)
@@ -616,23 +640,43 @@ class VsphereConnector(BaseConnector):
             block_size = (bytes_to_download * percent_block) // 100
 
         bytes_downloaded = 0
+        download_limit_error = None
 
         try:
             with open(local_file_path, "wb") as file_handle:
                 for chunk in r.iter_content(chunk_size=block_size):
                     if chunk:
                         bytes_downloaded += len(chunk)
+                        if bytes_downloaded > bytes_to_download or bytes_downloaded > self._max_download_size_bytes:
+                            download_limit_error = VSPHERE_ERR_FILE_SIZE_MISMATCH
+                            break
                         file_handle.write(chunk)
                         file_handle.flush()
                         os.fsync(file_handle.fileno())
                         self.send_progress(VSPHERE_PROG_FINISHED_DOWNLOADING_STATUS, float(bytes_downloaded) / float(bytes_to_download))
         except Exception as e:
+            self._remove_local_file(local_file_path)
             return (action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_SERVER_CONNECTION, e), content_size)
 
-        if bytes_downloaded != bytes_to_download:
+        if download_limit_error or bytes_downloaded != bytes_to_download:
+            self._remove_local_file(local_file_path)
             return (action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_FILE_SIZE_MISMATCH), bytes_downloaded)
 
         return (action_result.set_status(phantom.APP_SUCCESS, phantom.APP_SUCC_FILE_DOWNLOAD), bytes_downloaded)
+
+    def _remove_local_file(self, local_file_path):
+        try:
+            os.remove(local_file_path)
+        except FileNotFoundError:
+            pass
+        except OSError as e:
+            self.debug_print("Unable to remove partial download", e)
+
+    def _remove_temp_dir(self, temp_dir):
+        try:
+            shutil.rmtree(temp_dir)
+        except OSError as e:
+            self.debug_print("Unable to remove temporary download directory", e)
 
     def _parse_snap_list_file(self, local_file_path, snap_name, id):
         """Function that parses the snapshot list file from a local location and return the file name
@@ -751,16 +795,19 @@ class VsphereConnector(BaseConnector):
         status_code, content_size = self._download_file(snap_list_url, action_result, local_file_path)
 
         if phantom.is_fail(status_code):
+            self._remove_temp_dir(temp_dir)
             return action_result.get_status()
 
         # parse the downloaded file and get the file_name that our snapshot represents
         snap_file = self._parse_snap_list_file(local_file_path, snap_name, id)
         if not snap_file:
+            self._remove_temp_dir(temp_dir)
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_SNAPSHOT_PATH, snap_name)
 
         # got the file name, now get the url of this file_name
         snap_file_url = self._create_url_of_file(server, "snapshotData", vm, datacenter, snap_file)
         if not snap_file_url:
+            self._remove_temp_dir(temp_dir)
             return action_result.set_status(phantom.APP_ERROR, VSPHERE_ERR_SNAPSHOT_URL, snap_name)
 
         # Set the status to failure, this is to override the successful download status of the snapshot list file
@@ -773,6 +820,7 @@ class VsphereConnector(BaseConnector):
         self.save_progress(VSPHERE_PROG_SNAPSHOT_DOWNLOADING, snap_name=snap_name)
         status_code, content_size = self._download_file(snap_file_url, action_result, local_file_path, expect_binary=True)
         if phantom.is_fail(status_code):
+            self._remove_temp_dir(temp_dir)
             return action_result.get_status()
 
         # move it to the vault
@@ -790,10 +838,7 @@ class VsphereConnector(BaseConnector):
 
         # remove the temp folder
         finally:
-            try:
-                os.rmdir(temp_dir)
-            except Exception as e:
-                self.debug_print("Handled exception", e)
+            self._remove_temp_dir(temp_dir)
         return action_result.get_status()
 
     def _download_suspend_file(self, vmx_path, config, action_result, vm, container_id, datacenter):
@@ -835,6 +880,7 @@ class VsphereConnector(BaseConnector):
         status_code, content_size = self._download_file(vm_suspend_url, action_result, local_file_path, expect_binary=True)
 
         if phantom.is_fail(status_code):
+            self._remove_temp_dir(temp_dir)
             return action_result.get_status()
 
         # move it to the vault
@@ -850,11 +896,7 @@ class VsphereConnector(BaseConnector):
                 ["os memory dump", VSPHERE_CONST_SUSPEND_FILE_TYPE],
             )
         finally:
-            try:
-                # remove the temp folder
-                os.rmdir(temp_dir)
-            except Exception as e:
-                self.debug_print("Handled exception", e)
+            self._remove_temp_dir(temp_dir)
         return action_result.get_status()
 
     def _get_latest_snapshot_info(self, vm):
