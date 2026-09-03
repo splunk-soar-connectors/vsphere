@@ -1,7 +1,7 @@
 # vSphere
 
 Publisher: Splunk <br>
-Connector Version: 5.0.0 <br>
+Connector Version: 5.0.1-beta <br>
 Product Vendor: VMware <br>
 Product Name: vSphere <br>
 Minimum Product Version: 7.0.0
@@ -89,7 +89,7 @@ Read only: **True**
 
 PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 --------- | -------- | ----------- | ---- | --------
-**ip_hostname** | required | Hostname/IP address to get info of | string | `host name` `ip` |
+**ip_hostname** | required | Find a VM by vCenter Inventory Name, Guest OS hostname, or IP address | string | `host name` `ip` |
 
 #### Action Output
 

@@ -5,7 +5,7 @@
     "publisher": "Splunk",
     "type": "virtualization",
     "main_module": "vsphere_connector.py",
-    "app_version": "5.0.0",
+    "app_version": "5.0.1-beta",
     "utctime_updated": "2026-08-07T19:22:13.143239Z",
     "package_name": "phantom_vsphere",
     "product_vendor": "VMware",
@@ -161,7 +161,7 @@
                 "ip_hostname": {
                     "data_type": "string",
                     "order": 0,
-                    "description": "Hostname/IP address to get info of",
+                    "description": "Find a VM by vCenter Inventory Name, Guest OS hostname, or IP address",
                     "contains": [
                         "host name",
                         "ip"
