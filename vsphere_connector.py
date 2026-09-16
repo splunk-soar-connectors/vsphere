@@ -140,6 +140,7 @@ class VsphereConnector(BaseConnector):
             return False
 
         candidates = {
+            cls._normalize_endpoint(vm.get("name")),
             cls._normalize_endpoint(vm.get("guest.ipAddress")),
             cls._normalize_endpoint(vm.get("guest.hostName")),
         }

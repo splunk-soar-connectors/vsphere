@@ -161,7 +161,7 @@
                 "ip_hostname": {
                     "data_type": "string",
                     "order": 0,
-                    "description": "Hostname/IP address to get info of",
+                    "description": "Find a VM by vCenter Inventory Name, Guest OS hostname, or IP address",
                     "contains": [
                         "host name",
                         "ip"
