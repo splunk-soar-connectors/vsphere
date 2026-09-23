@@ -101,7 +101,7 @@ class VsphereConnector(BaseConnector):
             if self._verify is False:
                 context = ssl._create_unverified_context()
             else:
-                context = ssl.create_default_context()
+                context = ssl.create_default_context(cafile=self.get_ca_bundle())
             self._vs_server = SmartConnect(host=host, user=username, pwd=password, sslContext=context, port=port)
         except ValueError:
             return self.set_status_save_progress(phantom.APP_ERROR, VSPHERE_ERR_SERVER_FORMAT, server=server)
